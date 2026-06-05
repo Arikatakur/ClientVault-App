@@ -4,6 +4,13 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.1.2] - 2026-06-06
+
+**Phase 0.5 fix — first TestFlight build.** Proving the pipeline end to end.
+
+### Fixed
+- iOS release now builds with the **iOS 26 SDK** (latest-stable Xcode on the `macos-15` runner). App Store Connect rejected the previous Xcode 16 / iOS 18.5 SDK upload. The signing (`fastlane match`) and App Store Connect API upload path had already validated end to end — only the SDK toolchain needed bumping.
+
 ## [0.1.1] - 2026-06-05
 
 **Phase 0.5 — Windows → iPhone pipeline.** CI/CD to ship iOS to TestFlight without a Mac.
