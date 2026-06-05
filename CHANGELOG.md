@@ -4,6 +4,21 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.1.1] - 2026-06-05
+
+**Phase 0.5 — Windows → iPhone pipeline.** CI/CD to ship iOS to TestFlight without a Mac.
+
+### Added
+- GitHub Actions **CI** (`ci.yml`): `pub get`, Drift codegen, `flutter analyze`, `flutter test`, and a debug Android build on every push/PR.
+- GitHub Actions **iOS release** (`release-ios.yml`): tag-triggered (`v*`) build + sign + upload to **TestFlight** on macOS runners.
+- One-time **signing bootstrap** workflow + **fastlane** config (`match`, `Fastfile`, `Appfile`, `Matchfile`, `Gemfile`).
+- `NSFaceIDUsageDescription` usage string for biometric unlock (used from v0.3.0).
+- `docs/release-setup.md`: App ID, App Store Connect API key, certs repo, and the GitHub secrets checklist.
+
+### Changed
+- Bundle identifier finalized to **`org.clientvault.app`** (from the initial `com.arikatakur.clientvault` placeholder), matching the owned `clientvault.org` domain.
+- iOS app display name set to **ClientVault**.
+
 ## [0.1.0] - 2026-06-05
 
 **Phase 0 — Project Foundation.** A running, analyzable app skeleton.
