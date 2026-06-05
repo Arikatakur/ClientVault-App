@@ -23,6 +23,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Custom-scheme redirect for flutter_appauth (GitHub OAuth, v0.4.0).
+        // Required at build time so the library's manifest placeholder resolves;
+        // without it the Android manifest merger fails.
+        manifestPlaceholders["appAuthRedirectScheme"] = "org.clientvault.app"
     }
 
     buildTypes {
