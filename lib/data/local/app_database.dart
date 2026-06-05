@@ -7,13 +7,25 @@ part 'app_database.g.dart';
 
 /// The on-device SQLite database. `driftDatabase` opens a native, file-backed
 /// database on iOS/Android (and desktop); a test executor can be injected.
-@DriftDatabase(tables: [Clients, Projects])
+@DriftDatabase(tables: [Clients, Projects, VaultItems, VaultConfigs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'clientvault'));
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      // v2 adds the encrypted vault (additive; existing data is preserved).
+      if (from < 2) {
+        await m.createTable(vaultItems);
+        await m.createTable(vaultConfigs);
+      }
+    },
+  );
 
   // --- Clients ---------------------------------------------------------------
 
@@ -83,4 +95,36 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> deleteProject(String id) =>
       (delete(projects)..where((p) => p.id.equals(id))).go();
+
+  // --- Vault -----------------------------------------------------------------
+
+  /// The single vault crypto-config row, or `null` if the vault is not set up.
+  Future<VaultConfig?> getVaultConfig() {
+    return (select(vaultConfigs)..where((c) => c.id.equals(vaultConfigId)))
+        .getSingleOrNull();
+  }
+
+  /// Creates or replaces the vault crypto config.
+  Future<void> saveVaultConfig(VaultConfigsCompanion entry) =>
+      into(vaultConfigs).insertOnConflictUpdate(entry);
+
+  /// Watches all vault items, alphabetically by title (never decrypts).
+  Stream<List<VaultItem>> watchVaultItems() {
+    return (select(vaultItems)..orderBy([
+          (v) => OrderingTerm(expression: v.title),
+        ]))
+        .watch();
+  }
+
+  Future<int> insertVaultItem(VaultItemsCompanion entry) =>
+      into(vaultItems).insert(entry);
+
+  Future<int> updateVaultItem(String id, VaultItemsCompanion entry) =>
+      (update(vaultItems)..where((v) => v.id.equals(id))).write(entry);
+
+  Future<int> deleteVaultItem(String id) =>
+      (delete(vaultItems)..where((v) => v.id.equals(id))).go();
 }
+
+/// Primary key of the single [VaultConfigs] row.
+const String vaultConfigId = 'singleton';

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../data/providers/database_provider.dart';
+import '../vault/vault_controller.dart';
 import 'widgets/stat_card.dart';
 
 /// At-a-glance overview. Numbers are placeholders for now except the live
@@ -21,6 +22,11 @@ class DashboardScreen extends ConsumerWidget {
     final projects = ref.watch(projectsStreamProvider);
     final activeProjects = projects.maybeWhen(
       data: (list) => list.where((p) => p.status == 'active').length,
+      orElse: () => 0,
+    );
+    final vaultItems = ref.watch(vaultItemsProvider);
+    final vaultCount = vaultItems.maybeWhen(
+      data: (list) => list.length,
       orElse: () => 0,
     );
     final textTheme = Theme.of(context).textTheme;
@@ -54,9 +60,9 @@ class DashboardScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.md),
-          const Row(
+          Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: StatCard(
                   icon: Icons.account_balance_wallet_outlined,
                   label: 'Outstanding',
@@ -64,12 +70,12 @@ class DashboardScreen extends ConsumerWidget {
                   accent: AppColors.warning,
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: StatCard(
                   icon: Icons.lock_outline,
                   label: 'Vault items',
-                  value: '0',
+                  value: '$vaultCount',
                   accent: AppColors.success,
                 ),
               ),

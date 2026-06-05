@@ -1,56 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_spacing.dart';
+import '../../shared/widgets/empty_state.dart';
+import 'vault_controller.dart';
+import 'widgets/vault_lock_view.dart';
+import 'widgets/vault_setup_view.dart';
+import 'widgets/vault_unlocked_view.dart';
 
-class VaultScreen extends StatelessWidget {
+/// Entry point for the Vault tab. Renders the right surface for the current
+/// [VaultStatus] and auto-locks the vault whenever the app is backgrounded.
+class VaultScreen extends ConsumerStatefulWidget {
   const VaultScreen({super.key});
 
   @override
+  ConsumerState<VaultScreen> createState() => _VaultScreenState();
+}
+
+class _VaultScreenState extends ConsumerState<VaultScreen>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      ref.read(vaultControllerProvider.notifier).lock();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Vault')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.xl),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                height: 88,
-                width: 88,
-                decoration: const BoxDecoration(
-                  color: AppColors.accentSoft,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.lock_outline,
-                  size: 40,
-                  color: AppColors.accent,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Text('Your vault is locked', style: textTheme.titleLarge),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                'Set a master password to store passwords, API keys, and '
-                'accounts — encrypted on-device with AES-256-GCM.',
-                style: textTheme.bodyMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              FilledButton.icon(
-                onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Vault setup arrives in v0.3.0')),
-                ),
-                icon: const Icon(Icons.key_outlined),
-                label: const Text('Set up vault'),
-              ),
-            ],
-          ),
+    final status = ref.watch(vaultControllerProvider);
+    return switch (status) {
+      VaultStatus.loading => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      VaultStatus.unavailable => Scaffold(
+        appBar: AppBar(title: const Text('Vault')),
+        body: const EmptyState(
+          icon: Icons.lock_outline,
+          title: 'Vault runs on-device',
+          message:
+              'The encrypted vault is available on iOS and Android. Run on a '
+              'device to set it up and store credentials securely.',
         ),
       ),
-    );
+      VaultStatus.uninitialized => const VaultSetupView(),
+      VaultStatus.locked => const VaultLockView(),
+      VaultStatus.unlocked => const VaultUnlockedView(),
+    };
   }
 }

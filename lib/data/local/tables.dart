@@ -44,3 +44,52 @@ class Projects extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// An encrypted secret (login, API key, account, note, card). Only [title] and
+/// [type] are plaintext (for listing/search) — the sensitive payload lives in
+/// [ciphertext], sealed with AES-256-GCM under the vault's data key (DEK).
+class VaultItems extends Table {
+  TextColumn get id => text()();
+
+  /// `password | apiKey | account | note | card`.
+  TextColumn get type => text()();
+  TextColumn get title => text().withLength(min: 1, max: 200)();
+
+  // Optional links to a client/project (plaintext).
+  TextColumn get clientId => text().nullable().references(Clients, #id)();
+  TextColumn get projectId => text().nullable().references(Projects, #id)();
+
+  // AES-256-GCM sealed payload: ciphertext + unique nonce + integrity tag.
+  BlobColumn get ciphertext => blob()();
+  BlobColumn get nonce => blob()();
+  BlobColumn get mac => blob()();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Single-row crypto configuration for the vault (envelope encryption). Stores
+/// the KDF salt + parameters and the DEK wrapped by the password-derived KEK.
+/// The master password itself is never persisted; a wrong password is detected
+/// when GCM authentication of [wrappedDek] fails.
+class VaultConfigs extends Table {
+  TextColumn get id => text()();
+
+  BlobColumn get kdfSalt => blob()();
+  IntColumn get kdfMemory => integer()();
+  IntColumn get kdfIterations => integer()();
+  IntColumn get kdfParallelism => integer()();
+
+  BlobColumn get wrappedDek => blob()();
+  BlobColumn get wrappedDekNonce => blob()();
+  BlobColumn get wrappedDekMac => blob()();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

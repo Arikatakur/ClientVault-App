@@ -6,6 +6,7 @@
 import 'package:clientvault/app/app.dart';
 import 'package:clientvault/data/local/app_database.dart';
 import 'package:clientvault/data/providers/database_provider.dart';
+import 'package:clientvault/features/vault/vault_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -20,6 +21,9 @@ void main() {
           ),
           projectsStreamProvider.overrideWith(
             (ref) => Stream<List<Project>>.value(const <Project>[]),
+          ),
+          vaultItemsProvider.overrideWith(
+            (ref) => Stream<List<VaultItem>>.value(const <VaultItem>[]),
           ),
         ],
         child: const ClientVaultApp(),
