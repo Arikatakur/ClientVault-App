@@ -1,0 +1,4 @@
+app_identifier("org.clientvault.app")
+
+# Authentication uses the App Store Connect API key (configured in the Fastfile),
+# so apple_id / itc_team_id / team_id are intentionally omitted here.

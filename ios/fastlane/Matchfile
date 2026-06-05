@@ -1,0 +1,8 @@
+git_url(ENV["MATCH_GIT_URL"])
+storage_mode("git")
+
+type("appstore")
+app_identifier(["org.clientvault.app"])
+
+# Read/write is controlled per-lane in the Fastfile (read-only on release builds,
+# read-write only in the one-time bootstrap lane).
