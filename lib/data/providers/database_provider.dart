@@ -16,3 +16,26 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 final clientsStreamProvider = StreamProvider<List<Client>>((ref) {
   return ref.watch(databaseProvider).watchClients();
 });
+
+/// Reactive single client by id (emits `null` once the client is deleted).
+final clientByIdProvider = StreamProvider.family<Client?, String>((ref, id) {
+  return ref.watch(databaseProvider).watchClient(id);
+});
+
+/// Reactive list of every project (newest first).
+final projectsStreamProvider = StreamProvider<List<Project>>((ref) {
+  return ref.watch(databaseProvider).watchProjects();
+});
+
+/// Reactive list of the projects belonging to one client.
+final clientProjectsProvider = StreamProvider.family<List<Project>, String>((
+  ref,
+  clientId,
+) {
+  return ref.watch(databaseProvider).watchProjectsForClient(clientId);
+});
+
+/// Reactive single project by id (emits `null` once the project is deleted).
+final projectByIdProvider = StreamProvider.family<Project?, String>((ref, id) {
+  return ref.watch(databaseProvider).watchProject(id);
+});

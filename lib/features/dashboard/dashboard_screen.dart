@@ -18,6 +18,11 @@ class DashboardScreen extends ConsumerWidget {
       data: (list) => list.length,
       orElse: () => 0,
     );
+    final projects = ref.watch(projectsStreamProvider);
+    final activeProjects = projects.maybeWhen(
+      data: (list) => list.where((p) => p.status == 'active').length,
+      orElse: () => 0,
+    );
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
@@ -31,11 +36,11 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: StatCard(
                   icon: Icons.folder_open,
                   label: 'Active projects',
-                  value: '0',
+                  value: '$activeProjects',
                 ),
               ),
               const SizedBox(width: AppSpacing.md),

@@ -18,6 +18,9 @@ void main() {
           clientsStreamProvider.overrideWith(
             (ref) => Stream<List<Client>>.value(const <Client>[]),
           ),
+          projectsStreamProvider.overrideWith(
+            (ref) => Stream<List<Project>>.value(const <Project>[]),
+          ),
         ],
         child: const ClientVaultApp(),
       ),

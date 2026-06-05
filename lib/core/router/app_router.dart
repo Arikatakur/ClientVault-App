@@ -1,14 +1,18 @@
 import 'package:go_router/go_router.dart';
 
+import '../../features/clients/client_detail_screen.dart';
 import '../../features/clients/clients_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/projects/project_detail_screen.dart';
 import '../../features/projects/projects_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/shell/home_shell.dart';
 import '../../features/vault/vault_screen.dart';
 
 /// Declarative route tree. A [StatefulShellRoute] gives each bottom-tab its own
-/// navigation stack with preserved state, wrapped by [HomeShell].
+/// navigation stack with preserved state, wrapped by [HomeShell]. Detail screens
+/// are top-level routes pushed *over* the shell so they present full-screen and
+/// return to the originating tab on back.
 final GoRouter appRouter = GoRouter(
   initialLocation: '/dashboard',
   routes: [
@@ -57,6 +61,16 @@ final GoRouter appRouter = GoRouter(
           ],
         ),
       ],
+    ),
+    GoRoute(
+      path: '/clients/:id',
+      builder: (context, state) =>
+          ClientDetailScreen(clientId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/projects/:id',
+      builder: (context, state) =>
+          ProjectDetailScreen(projectId: state.pathParameters['id']!),
     ),
   ],
 );
