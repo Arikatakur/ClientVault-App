@@ -4,6 +4,28 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.3.0] - 2026-06-06
+
+**Phase 2 — The Vault.** Encrypted, biometric-locked credential storage.
+
+### Added
+- **Encrypted vault** using envelope encryption: a random AES-256 data key (DEK) seals each item, and the DEK is wrapped by a key derived from the master password via **Argon2id**. The master password is never stored.
+- **Master-password setup** with a strength meter and a clear "no recovery" warning.
+- **Lock screen** with master-password and **biometric** (Face ID / Touch ID) unlock. Biometric unlock is opt-in and stashes the DEK in the device keychain/keystore.
+- **Encrypted CRUD** for passwords, API keys, accounts, secure notes, and cards. The list shows titles only — secrets are decrypted lazily, one at a time, on reveal.
+- **Reveal sheet** with show/hide, copy, and an **automatic clipboard clear after 30 seconds**.
+- **Auto-lock** when the app is backgrounded, and a live **Vault items** count on the dashboard.
+- Crypto unit tests (DEK wrap/unwrap, wrong-password rejection, unique nonces).
+
+### Changed
+- Database schema migrated to **v2** (additive: `vault_items` + `vault_configs`); existing clients and projects are preserved.
+
+### Security
+- AES-256-GCM (authenticated) at rest; Argon2id KDF (19 MiB, t=2, p=1); a unique random nonce per encryption; the data key is held in memory only while unlocked.
+
+### Notes
+- Android biometric native wiring (FragmentActivity + permission) and vault-screen screenshot protection are deferred; iOS Face ID is configured. Linking vault items to clients/projects in the UI comes later.
+
 ## [0.2.0] - 2026-06-06
 
 **Phase 1 — Core CRUD.** Clients and projects, fully linked.
