@@ -4,6 +4,25 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.2.0] - 2026-06-06
+
+**Phase 1 — Core CRUD.** Clients and projects, fully linked.
+
+### Added
+- **Client detail screen** — contact info, notes, and the client's projects, reached by tapping a client row.
+- **Full client form** (add and edit) capturing name, company, email, phone, and notes.
+- **Project CRUD**: a live Projects tab plus a create/edit form with a client picker, status (lead / active / paused / done), budget + currency, and an optional due date.
+- **Project detail screen** that links back to its client.
+- Reusable project status chips and dependency-free money/date formatting helpers.
+
+### Changed
+- Dashboard **Active projects** is now a live count from the database.
+- Deleting a client cascades to its projects in a single transaction.
+- Clients list rows now open the detail screen instead of deleting inline.
+
+### Internal
+- New Drift queries (project list / by-client / by-id, partial client and project updates, cascade delete) and Riverpod providers (projects, client-by-id, project-by-id, client-projects).
+
 ## [0.1.2] - 2026-06-06
 
 **Phase 0.5 fix — first TestFlight build.** Proving the pipeline end to end.
