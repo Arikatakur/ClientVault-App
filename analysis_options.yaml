@@ -1,0 +1,13 @@
+# Static analysis configuration for ClientVault.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    # Generated sources (Drift, etc.) are not hand-maintained.
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    require_trailing_commas: true
