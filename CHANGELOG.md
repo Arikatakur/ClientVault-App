@@ -4,6 +4,22 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.7.0] - 2026-06-06
+
+**Feedback round.** Improvements from on-device testing.
+
+### Added
+- **Browse repository commits** — open a linked repo's recent commits from the project's GitHub card, and tap any commit to read its full message.
+- **Partial / split payments** — each payment tracks an *amount paid so far*, so a ₪4,000 invoice with ₪1,000 received shows **Partial** with ₪3,000 outstanding. Roll-ups and the dashboard total use amounts actually received.
+- **Shekel (₪ / ILS) currency** for projects and payments.
+- **Recent activity** on the dashboard — a live feed of the latest clients, projects, payments, and vault items.
+
+### Fixed
+- **Auto-lock now works.** Moved to an app-wide watcher that locks both when the app is backgrounded and after the chosen idle period in the foreground. The previous hook only ran on the Vault tab and ignored idle time entirely.
+
+### Changed
+- Database schema migrated to **v4** (additive: payments gain `paid_amount`); existing fully-paid rows are backfilled.
+
 ## [0.6.0] - 2026-06-06
 
 **Phase 5 (part 1) — Vault security polish.**
