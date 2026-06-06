@@ -4,6 +4,11 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.9.1] - 2026-06-06
+
+### Fixed
+- Added `NSPhotoLibraryUsageDescription` to iOS Info.plist — required by Apple because `file_picker` references the photo library API; absence caused the v0.9.0 binary to be rejected by App Store Connect (ITMS-90683).
+
 ## [0.9.0] - 2026-06-06
 
 **File attachments.** Keep client and project documents in the app.

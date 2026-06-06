@@ -26,6 +26,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>ClientVault uses Face ID to unlock your encrypted vault.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>ClientVault can attach files from your photo library to clients and projects.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSceneManifest</key>
