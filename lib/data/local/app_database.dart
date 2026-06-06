@@ -164,6 +164,12 @@ class AppDatabase extends _$AppDatabase {
   /// Watches every payment (used for the dashboard outstanding total).
   Stream<List<Payment>> watchPayments() => select(payments).watch();
 
+  /// One-shot read of every payment (used by the reminder scheduler).
+  Future<List<Payment>> getAllPayments() => select(payments).get();
+
+  /// One-shot read of every project (used by the reminder scheduler).
+  Future<List<Project>> getAllProjects() => select(projects).get();
+
   /// Watches the payments for one project, newest issue/created first.
   Stream<List<Payment>> watchPaymentsForProject(String projectId) {
     return (select(payments)

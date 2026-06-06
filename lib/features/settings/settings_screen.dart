@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/notifications/notification_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../github/github_controller.dart';
+import '../notifications/notification_prefs.dart';
+import '../notifications/reminder_scheduler.dart';
 import '../vault/vault_controller.dart';
 import '../vault/widgets/change_master_password_sheet.dart';
 
@@ -21,11 +24,44 @@ class SettingsScreen extends ConsumerWidget {
     };
     final vaultStatus = ref.watch(vaultControllerProvider);
     final lockTimeout = ref.watch(lockTimeoutProvider);
+    final notifPrefs = ref.watch(notificationPrefsProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
+          const _SectionHeader('Notifications'),
+          SwitchListTile(
+            secondary: const Icon(
+              Icons.notifications_active_outlined,
+              color: AppColors.textSecondary,
+            ),
+            title: const Text('Due-date reminders'),
+            subtitle: const Text('Get reminded before payments and deadlines'),
+            value: notifPrefs.enabled,
+            onChanged: (value) => _setRemindersEnabled(ref, value),
+          ),
+          ListTile(
+            enabled: notifPrefs.enabled,
+            leading: const Icon(
+              Icons.schedule_outlined,
+              color: AppColors.textSecondary,
+            ),
+            title: const Text('Remind me'),
+            subtitle: Text(_leadLabel(notifPrefs.leadDays)),
+            onTap: notifPrefs.enabled ? () => _pickLeadDays(context, ref) : null,
+          ),
+          ListTile(
+            enabled: notifPrefs.enabled,
+            leading: const Icon(
+              Icons.notification_add_outlined,
+              color: AppColors.textSecondary,
+            ),
+            title: const Text('Send a test notification'),
+            onTap: notifPrefs.enabled
+                ? () => _sendTestNotification(context, ref)
+                : null,
+          ),
           const _SectionHeader('Security'),
           ListTile(
             leading: const Icon(Icons.timer_outlined, color: AppColors.textSecondary),
@@ -63,7 +99,7 @@ class SettingsScreen extends ConsumerWidget {
             leading: Icon(Icons.info_outline, color: AppColors.textSecondary),
             title: Text('Version'),
             trailing: Text(
-              '0.9.0',
+              '0.10.0',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -104,6 +140,74 @@ Future<void> _pickTimeout(BuildContext context, WidgetRef ref) async {
   if (choice != null) {
     await ref.read(lockTimeoutProvider.notifier).set(choice);
   }
+}
+
+String _leadLabel(int days) => switch (days) {
+  0 => 'On the due date',
+  1 => '1 day before',
+  3 => '3 days before',
+  7 => '1 week before',
+  _ => '$days days before',
+};
+
+Future<void> _setRemindersEnabled(WidgetRef ref, bool value) async {
+  await ref.read(notificationPrefsProvider.notifier).setEnabled(value);
+  if (value) {
+    await ref.read(notificationServiceProvider).requestPermission();
+  }
+  await ref.read(reminderSchedulerProvider).rescheduleAll();
+}
+
+Future<void> _pickLeadDays(BuildContext context, WidgetRef ref) async {
+  final current = ref.read(notificationPrefsProvider).leadDays;
+  final choice = await showModalBottomSheet<int>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final option in const [0, 1, 3, 7])
+            ListTile(
+              title: Text(_leadLabel(option)),
+              trailing: option == current
+                  ? const Icon(Icons.check, color: AppColors.accent)
+                  : null,
+              onTap: () => Navigator.of(sheetContext).pop(option),
+            ),
+        ],
+      ),
+    ),
+  );
+  if (choice != null) {
+    await ref.read(notificationPrefsProvider.notifier).setLeadDays(choice);
+    await ref.read(reminderSchedulerProvider).rescheduleAll();
+  }
+}
+
+Future<void> _sendTestNotification(BuildContext context, WidgetRef ref) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final granted = await ref
+      .read(notificationServiceProvider)
+      .requestPermission();
+  if (!granted) {
+    messenger.showSnackBar(
+      const SnackBar(
+        content: Text('Enable notifications for ClientVault in system settings.'),
+      ),
+    );
+    return;
+  }
+  await ref
+      .read(notificationServiceProvider)
+      .showNow(
+        id: 999999,
+        title: 'ClientVault',
+        body: "Reminders are on — you'll hear from us before due dates.",
+      );
+  messenger.showSnackBar(
+    const SnackBar(content: Text('Test notification sent.')),
+  );
 }
 
 void _changePassword(BuildContext context, VaultStatus status) {

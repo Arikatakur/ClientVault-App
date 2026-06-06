@@ -12,6 +12,8 @@ class SecureStore {
   static const String _dekKey = 'vault_dek_b64';
   static const String _githubTokenKey = 'github_token';
   static const String _lockTimeoutKey = 'lock_timeout_seconds';
+  static const String _notifEnabledKey = 'notif_enabled';
+  static const String _notifLeadDaysKey = 'notif_lead_days';
 
   // --- Vault DEK (biometric unlock) ------------------------------------------
 
@@ -42,4 +44,22 @@ class SecureStore {
     final value = await _storage.read(key: _lockTimeoutKey);
     return int.tryParse(value ?? '') ?? 0;
   }
+
+  /// Whether due-date reminders are enabled. Defaults to `true` (opt-out).
+  Future<bool> readNotifEnabled() async {
+    final value = await _storage.read(key: _notifEnabledKey);
+    return value == null ? true : value == 'true';
+  }
+
+  Future<void> writeNotifEnabled(bool enabled) =>
+      _storage.write(key: _notifEnabledKey, value: '$enabled');
+
+  /// How many days before a due date to remind. Defaults to 1.
+  Future<int> readNotifLeadDays() async {
+    final value = await _storage.read(key: _notifLeadDaysKey);
+    return int.tryParse(value ?? '') ?? 1;
+  }
+
+  Future<void> writeNotifLeadDays(int days) =>
+      _storage.write(key: _notifLeadDaysKey, value: '$days');
 }

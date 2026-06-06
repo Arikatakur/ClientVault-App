@@ -43,5 +43,9 @@ void main() {
 
     // Dashboard is the initial tab.
     expect(find.text('Dashboard'), findsOneWidget);
+
+    // Unmount so the notifications bootstrap cancels its debounce timer
+    // (otherwise the test reports a pending timer).
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 }
