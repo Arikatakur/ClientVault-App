@@ -6,7 +6,9 @@ plugins {
 
 android {
     namespace = "org.clientvault.app"
-    compileSdk = flutter.compileSdkVersion
+    // file_picker's transitive flutter_plugin_android_lifecycle requires
+    // compileSdk 36+, which is newer than Flutter's current default.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
