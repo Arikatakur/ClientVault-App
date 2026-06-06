@@ -93,3 +93,27 @@ class VaultConfigs extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// A payment/invoice line on a [Projects] row. `status` is draft|sent|paid;
+/// "overdue" is derived (unpaid and past [dueDate]) rather than stored, so it
+/// stays accurate without a background job.
+class Payments extends Table {
+  TextColumn get id => text()();
+  TextColumn get projectId => text().references(Projects, #id)();
+  RealColumn get amount => real()();
+  TextColumn get currency => text().withDefault(const Constant('USD'))();
+
+  /// `draft | sent | paid`.
+  TextColumn get status => text().withDefault(const Constant('draft'))();
+
+  DateTimeColumn get issuedDate => dateTime().nullable()();
+  DateTimeColumn get dueDate => dateTime().nullable()();
+  DateTimeColumn get paidDate => dateTime().nullable()();
+  TextColumn get notes => text().nullable()();
+
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

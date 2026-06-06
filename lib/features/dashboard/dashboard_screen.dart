@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/format.dart';
 import '../../data/providers/database_provider.dart';
+import '../payments/payment_status.dart';
 import '../vault/vault_controller.dart';
 import 'widgets/stat_card.dart';
 
@@ -28,6 +30,13 @@ class DashboardScreen extends ConsumerWidget {
     final vaultCount = vaultItems.maybeWhen(
       data: (list) => list.length,
       orElse: () => 0,
+    );
+    final payments = ref.watch(paymentsStreamProvider);
+    final outstanding = payments.maybeWhen(
+      data: (list) => list
+          .where((p) => p.status != PaymentStatus.paid.value)
+          .fold<double>(0, (sum, p) => sum + p.amount),
+      orElse: () => 0.0,
     );
     final textTheme = Theme.of(context).textTheme;
 
@@ -62,11 +71,11 @@ class DashboardScreen extends ConsumerWidget {
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: StatCard(
                   icon: Icons.account_balance_wallet_outlined,
                   label: 'Outstanding',
-                  value: r'$0',
+                  value: formatMoney(outstanding, 'USD'),
                   accent: AppColors.warning,
                 ),
               ),

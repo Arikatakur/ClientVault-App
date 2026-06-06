@@ -11,6 +11,8 @@ import '../../data/providers/database_provider.dart';
 import '../../shared/widgets/status_chip.dart';
 import '../github/github_controller.dart';
 import '../github/widgets/repo_picker_sheet.dart';
+import '../payments/payment_status.dart';
+import '../payments/widgets/payment_form_sheet.dart';
 import 'project_status.dart';
 import 'widgets/project_form_sheet.dart';
 
@@ -142,6 +144,7 @@ class _ProjectDetailView extends ConsumerWidget {
             label: 'Created',
             value: formatDate(project.createdAt),
           ),
+          _PaymentsSection(project: project),
           if (project.description != null) ...[
             const SizedBox(height: AppSpacing.md),
             Card(
@@ -160,6 +163,165 @@ class _ProjectDetailView extends ConsumerWidget {
           ],
           _GitHubSection(project: project),
         ],
+      ),
+    );
+  }
+}
+
+class _PaymentsSection extends ConsumerWidget {
+  const _PaymentsSection({required this.project});
+
+  final Project project;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final paymentsAsync = ref.watch(projectPaymentsProvider(project.id));
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Payments', style: textTheme.titleMedium),
+            TextButton.icon(
+              onPressed: () => showPaymentSheet(
+                context,
+                projectId: project.id,
+                defaultCurrency: project.currency,
+              ),
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Add'),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        paymentsAsync.when(
+          loading: () => const Padding(
+            padding: EdgeInsets.all(AppSpacing.md),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (_, _) => Text(
+            'Payments are available on-device.',
+            style: textTheme.bodyMedium,
+          ),
+          data: (payments) {
+            if (payments.isEmpty) {
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: Text(
+                    'No payments yet for this project.',
+                    style: textTheme.bodyMedium,
+                  ),
+                ),
+              );
+            }
+            final invoiced = payments.fold<double>(
+              0,
+              (sum, p) => sum + p.amount,
+            );
+            final paid = payments
+                .where((p) => p.status == PaymentStatus.paid.value)
+                .fold<double>(0, (sum, p) => sum + p.amount);
+            final outstanding = invoiced - paid;
+            return Column(
+              children: [
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Row(
+                      children: [
+                        _Total(
+                          label: 'Invoiced',
+                          value: formatMoney(invoiced, project.currency),
+                        ),
+                        _Total(
+                          label: 'Paid',
+                          value: formatMoney(paid, project.currency),
+                          color: AppColors.success,
+                        ),
+                        _Total(
+                          label: 'Outstanding',
+                          value: formatMoney(outstanding, project.currency),
+                          color: outstanding > 0
+                              ? AppColors.warning
+                              : AppColors.textPrimary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                for (final payment in payments)
+                  _PaymentTile(project: project, payment: payment),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _Total extends StatelessWidget {
+  const _Total({required this.label, required this.value, this.color});
+
+  final String label;
+  final String value;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            value,
+            style: textTheme.titleMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(label, style: textTheme.bodySmall),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaymentTile extends StatelessWidget {
+  const _PaymentTile({required this.project, required this.payment});
+
+  final Project project;
+  final Payment payment;
+
+  @override
+  Widget build(BuildContext context) {
+    final overdue = isPaymentOverdue(payment);
+    final status = PaymentStatus.fromValue(payment.status);
+    final chipLabel = overdue ? 'Overdue' : status.label;
+    final chipColor = overdue ? AppColors.danger : status.color;
+    return Card(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: ListTile(
+        title: Text(formatMoney(payment.amount, payment.currency)),
+        subtitle: Text(
+          payment.dueDate != null
+              ? 'Due ${formatDate(payment.dueDate!)}'
+              : 'No due date',
+        ),
+        trailing: StatusChip(label: chipLabel, color: chipColor),
+        onTap: () => showPaymentSheet(
+          context,
+          projectId: project.id,
+          defaultCurrency: project.currency,
+          existing: payment,
+        ),
       ),
     );
   }

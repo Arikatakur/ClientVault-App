@@ -39,3 +39,16 @@ final clientProjectsProvider = StreamProvider.family<List<Project>, String>((
 final projectByIdProvider = StreamProvider.family<Project?, String>((ref, id) {
   return ref.watch(databaseProvider).watchProject(id);
 });
+
+/// Reactive list of every payment (used for the dashboard outstanding total).
+final paymentsStreamProvider = StreamProvider<List<Payment>>((ref) {
+  return ref.watch(databaseProvider).watchPayments();
+});
+
+/// Reactive list of the payments for one project.
+final projectPaymentsProvider = StreamProvider.family<List<Payment>, String>((
+  ref,
+  projectId,
+) {
+  return ref.watch(databaseProvider).watchPaymentsForProject(projectId);
+});

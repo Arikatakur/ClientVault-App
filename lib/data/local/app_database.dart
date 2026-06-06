@@ -7,22 +7,25 @@ part 'app_database.g.dart';
 
 /// The on-device SQLite database. `driftDatabase` opens a native, file-backed
 /// database on iOS/Android (and desktop); a test executor can be injected.
-@DriftDatabase(tables: [Clients, Projects, VaultItems, VaultConfigs])
+@DriftDatabase(tables: [Clients, Projects, VaultItems, VaultConfigs, Payments])
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'clientvault'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
     onUpgrade: (m, from, to) async {
-      // v2 adds the encrypted vault (additive; existing data is preserved).
+      // Additive migrations; existing rows are always preserved.
       if (from < 2) {
         await m.createTable(vaultItems);
         await m.createTable(vaultConfigs);
+      }
+      if (from < 3) {
+        await m.createTable(payments);
       }
     },
   );
@@ -50,10 +53,20 @@ class AppDatabase extends _$AppDatabase {
   Future<int> updateClient(String id, ClientsCompanion entry) =>
       (update(clients)..where((c) => c.id.equals(id))).write(entry);
 
-  /// Deletes a client and all of its projects in a single transaction, so the
-  /// projects table is never left with orphaned rows.
+  /// Deletes a client with all of its projects and their payments in a single
+  /// transaction, so no rows are left orphaned.
   Future<void> deleteClient(String id) {
     return transaction(() async {
+      final projectIds =
+          await (selectOnly(projects)
+                ..addColumns([projects.id])
+                ..where(projects.clientId.equals(id)))
+              .map((row) => row.read(projects.id)!)
+              .get();
+      if (projectIds.isNotEmpty) {
+        await (delete(payments)..where((p) => p.projectId.isIn(projectIds)))
+            .go();
+      }
       await (delete(projects)..where((p) => p.clientId.equals(id))).go();
       await (delete(clients)..where((c) => c.id.equals(id))).go();
     });
@@ -93,8 +106,13 @@ class AppDatabase extends _$AppDatabase {
   Future<int> updateProject(String id, ProjectsCompanion entry) =>
       (update(projects)..where((p) => p.id.equals(id))).write(entry);
 
-  Future<int> deleteProject(String id) =>
-      (delete(projects)..where((p) => p.id.equals(id))).go();
+  /// Deletes a project and its payments in a single transaction.
+  Future<void> deleteProject(String id) {
+    return transaction(() async {
+      await (delete(payments)..where((p) => p.projectId.equals(id))).go();
+      await (delete(projects)..where((p) => p.id.equals(id))).go();
+    });
+  }
 
   // --- Vault -----------------------------------------------------------------
 
@@ -124,6 +142,33 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> deleteVaultItem(String id) =>
       (delete(vaultItems)..where((v) => v.id.equals(id))).go();
+
+  // --- Payments --------------------------------------------------------------
+
+  /// Watches every payment (used for the dashboard outstanding total).
+  Stream<List<Payment>> watchPayments() => select(payments).watch();
+
+  /// Watches the payments for one project, newest issue/created first.
+  Stream<List<Payment>> watchPaymentsForProject(String projectId) {
+    return (select(payments)
+          ..where((p) => p.projectId.equals(projectId))
+          ..orderBy([
+            (p) =>
+                OrderingTerm(expression: p.issuedDate, mode: OrderingMode.desc),
+            (p) =>
+                OrderingTerm(expression: p.createdAt, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
+  Future<int> insertPayment(PaymentsCompanion entry) =>
+      into(payments).insert(entry);
+
+  Future<int> updatePayment(String id, PaymentsCompanion entry) =>
+      (update(payments)..where((p) => p.id.equals(id))).write(entry);
+
+  Future<int> deletePayment(String id) =>
+      (delete(payments)..where((p) => p.id.equals(id))).go();
 }
 
 /// Primary key of the single [VaultConfigs] row.

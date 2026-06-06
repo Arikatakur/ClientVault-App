@@ -25,6 +25,9 @@ void main() {
           vaultItemsProvider.overrideWith(
             (ref) => Stream<List<VaultItem>>.value(const <VaultItem>[]),
           ),
+          paymentsStreamProvider.overrideWith(
+            (ref) => Stream<List<Payment>>.value(const <Payment>[]),
+          ),
         ],
         child: const ClientVaultApp(),
       ),
