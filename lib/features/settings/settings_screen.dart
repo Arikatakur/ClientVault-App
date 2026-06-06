@@ -1,36 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../github/github_controller.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final github = ref.watch(githubControllerProvider);
+    final githubSubtitle = switch (github.status) {
+      GitHubStatus.connected => '@${github.user?.login ?? ''}',
+      GitHubStatus.loading => 'Checking…',
+      _ => 'Not connected',
+    };
+
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
-        children: const [
-          _SectionHeader('Security'),
-          _SoonTile(icon: Icons.timer_outlined, title: 'Auto-lock timeout'),
-          _SoonTile(
+        children: [
+          const _SectionHeader('Security'),
+          const _SoonTile(
+            icon: Icons.timer_outlined,
+            title: 'Auto-lock timeout',
+          ),
+          const _SoonTile(
             icon: Icons.password_outlined,
             title: 'Change master password',
           ),
-          _SoonTile(icon: Icons.fingerprint, title: 'Biometric unlock'),
-          _SectionHeader('Data'),
-          _SoonTile(
+          const _SectionHeader('Integrations'),
+          ListTile(
+            leading: const Icon(Icons.code, color: AppColors.textSecondary),
+            title: const Text('GitHub'),
+            subtitle: Text(githubSubtitle),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: AppColors.textTertiary,
+            ),
+            onTap: () => context.push('/github'),
+          ),
+          const _SectionHeader('Data'),
+          const _SoonTile(
             icon: Icons.backup_outlined,
             title: 'Export encrypted backup',
           ),
-          _SoonTile(icon: Icons.restore_outlined, title: 'Import backup'),
-          _SectionHeader('About'),
-          ListTile(
+          const _SoonTile(icon: Icons.restore_outlined, title: 'Import backup'),
+          const _SectionHeader('About'),
+          const ListTile(
             leading: Icon(Icons.info_outline, color: AppColors.textSecondary),
             title: Text('Version'),
             trailing: Text(
-              '0.3.0',
+              '0.4.0',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),

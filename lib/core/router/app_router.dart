@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/clients/client_detail_screen.dart';
 import '../../features/clients/clients_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
+import '../../features/github/github_connect_screen.dart';
 import '../../features/projects/project_detail_screen.dart';
 import '../../features/projects/projects_screen.dart';
 import '../../features/settings/settings_screen.dart';
@@ -71,6 +72,10 @@ final GoRouter appRouter = GoRouter(
       path: '/projects/:id',
       builder: (context, state) =>
           ProjectDetailScreen(projectId: state.pathParameters['id']!),
+    ),
+    GoRoute(
+      path: '/github',
+      builder: (context, state) => const GitHubConnectScreen(),
     ),
   ],
 );

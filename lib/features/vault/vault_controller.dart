@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/auth/biometric_auth.dart';
 import '../../core/crypto/crypto_service.dart';
 import '../../core/storage/secure_store.dart';
+import '../../core/storage/secure_store_provider.dart';
 import '../../core/utils/id.dart';
 import '../../data/local/app_database.dart';
 import '../../data/providers/database_provider.dart';
@@ -18,7 +19,6 @@ import 'vault_payload.dart';
 enum VaultStatus { loading, unavailable, uninitialized, locked, unlocked }
 
 final cryptoServiceProvider = Provider<CryptoService>((ref) => CryptoService());
-final secureStoreProvider = Provider<SecureStore>((ref) => SecureStore());
 final biometricAuthProvider = Provider<BiometricAuth>((ref) => BiometricAuth());
 
 /// Reactive list of vault items (titles/types only — never decrypted here).
