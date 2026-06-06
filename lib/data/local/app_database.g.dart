@@ -2612,6 +2612,18 @@ class $PaymentsTable extends Payments with TableInfo<$PaymentsTable, Payment> {
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _paidAmountMeta = const VerificationMeta(
+    'paidAmount',
+  );
+  @override
+  late final GeneratedColumn<double> paidAmount = GeneratedColumn<double>(
+    'paid_amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _currencyMeta = const VerificationMeta(
     'currency',
   );
@@ -2703,6 +2715,7 @@ class $PaymentsTable extends Payments with TableInfo<$PaymentsTable, Payment> {
     id,
     projectId,
     amount,
+    paidAmount,
     currency,
     status,
     issuedDate,
@@ -2744,6 +2757,12 @@ class $PaymentsTable extends Payments with TableInfo<$PaymentsTable, Payment> {
       );
     } else if (isInserting) {
       context.missing(_amountMeta);
+    }
+    if (data.containsKey('paid_amount')) {
+      context.handle(
+        _paidAmountMeta,
+        paidAmount.isAcceptableOrUnknown(data['paid_amount']!, _paidAmountMeta),
+      );
     }
     if (data.containsKey('currency')) {
       context.handle(
@@ -2818,6 +2837,10 @@ class $PaymentsTable extends Payments with TableInfo<$PaymentsTable, Payment> {
         DriftSqlType.double,
         data['${effectivePrefix}amount'],
       )!,
+      paidAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}paid_amount'],
+      )!,
       currency: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}currency'],
@@ -2863,6 +2886,9 @@ class Payment extends DataClass implements Insertable<Payment> {
   final String id;
   final String projectId;
   final double amount;
+
+  /// How much has been received so far (supports partial / split payments).
+  final double paidAmount;
   final String currency;
 
   /// `draft | sent | paid`.
@@ -2877,6 +2903,7 @@ class Payment extends DataClass implements Insertable<Payment> {
     required this.id,
     required this.projectId,
     required this.amount,
+    required this.paidAmount,
     required this.currency,
     required this.status,
     this.issuedDate,
@@ -2892,6 +2919,7 @@ class Payment extends DataClass implements Insertable<Payment> {
     map['id'] = Variable<String>(id);
     map['project_id'] = Variable<String>(projectId);
     map['amount'] = Variable<double>(amount);
+    map['paid_amount'] = Variable<double>(paidAmount);
     map['currency'] = Variable<String>(currency);
     map['status'] = Variable<String>(status);
     if (!nullToAbsent || issuedDate != null) {
@@ -2916,6 +2944,7 @@ class Payment extends DataClass implements Insertable<Payment> {
       id: Value(id),
       projectId: Value(projectId),
       amount: Value(amount),
+      paidAmount: Value(paidAmount),
       currency: Value(currency),
       status: Value(status),
       issuedDate: issuedDate == null && nullToAbsent
@@ -2944,6 +2973,7 @@ class Payment extends DataClass implements Insertable<Payment> {
       id: serializer.fromJson<String>(json['id']),
       projectId: serializer.fromJson<String>(json['projectId']),
       amount: serializer.fromJson<double>(json['amount']),
+      paidAmount: serializer.fromJson<double>(json['paidAmount']),
       currency: serializer.fromJson<String>(json['currency']),
       status: serializer.fromJson<String>(json['status']),
       issuedDate: serializer.fromJson<DateTime?>(json['issuedDate']),
@@ -2961,6 +2991,7 @@ class Payment extends DataClass implements Insertable<Payment> {
       'id': serializer.toJson<String>(id),
       'projectId': serializer.toJson<String>(projectId),
       'amount': serializer.toJson<double>(amount),
+      'paidAmount': serializer.toJson<double>(paidAmount),
       'currency': serializer.toJson<String>(currency),
       'status': serializer.toJson<String>(status),
       'issuedDate': serializer.toJson<DateTime?>(issuedDate),
@@ -2976,6 +3007,7 @@ class Payment extends DataClass implements Insertable<Payment> {
     String? id,
     String? projectId,
     double? amount,
+    double? paidAmount,
     String? currency,
     String? status,
     Value<DateTime?> issuedDate = const Value.absent(),
@@ -2988,6 +3020,7 @@ class Payment extends DataClass implements Insertable<Payment> {
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
     amount: amount ?? this.amount,
+    paidAmount: paidAmount ?? this.paidAmount,
     currency: currency ?? this.currency,
     status: status ?? this.status,
     issuedDate: issuedDate.present ? issuedDate.value : this.issuedDate,
@@ -3002,6 +3035,9 @@ class Payment extends DataClass implements Insertable<Payment> {
       id: data.id.present ? data.id.value : this.id,
       projectId: data.projectId.present ? data.projectId.value : this.projectId,
       amount: data.amount.present ? data.amount.value : this.amount,
+      paidAmount: data.paidAmount.present
+          ? data.paidAmount.value
+          : this.paidAmount,
       currency: data.currency.present ? data.currency.value : this.currency,
       status: data.status.present ? data.status.value : this.status,
       issuedDate: data.issuedDate.present
@@ -3021,6 +3057,7 @@ class Payment extends DataClass implements Insertable<Payment> {
           ..write('id: $id, ')
           ..write('projectId: $projectId, ')
           ..write('amount: $amount, ')
+          ..write('paidAmount: $paidAmount, ')
           ..write('currency: $currency, ')
           ..write('status: $status, ')
           ..write('issuedDate: $issuedDate, ')
@@ -3038,6 +3075,7 @@ class Payment extends DataClass implements Insertable<Payment> {
     id,
     projectId,
     amount,
+    paidAmount,
     currency,
     status,
     issuedDate,
@@ -3054,6 +3092,7 @@ class Payment extends DataClass implements Insertable<Payment> {
           other.id == this.id &&
           other.projectId == this.projectId &&
           other.amount == this.amount &&
+          other.paidAmount == this.paidAmount &&
           other.currency == this.currency &&
           other.status == this.status &&
           other.issuedDate == this.issuedDate &&
@@ -3068,6 +3107,7 @@ class PaymentsCompanion extends UpdateCompanion<Payment> {
   final Value<String> id;
   final Value<String> projectId;
   final Value<double> amount;
+  final Value<double> paidAmount;
   final Value<String> currency;
   final Value<String> status;
   final Value<DateTime?> issuedDate;
@@ -3081,6 +3121,7 @@ class PaymentsCompanion extends UpdateCompanion<Payment> {
     this.id = const Value.absent(),
     this.projectId = const Value.absent(),
     this.amount = const Value.absent(),
+    this.paidAmount = const Value.absent(),
     this.currency = const Value.absent(),
     this.status = const Value.absent(),
     this.issuedDate = const Value.absent(),
@@ -3095,6 +3136,7 @@ class PaymentsCompanion extends UpdateCompanion<Payment> {
     required String id,
     required String projectId,
     required double amount,
+    this.paidAmount = const Value.absent(),
     this.currency = const Value.absent(),
     this.status = const Value.absent(),
     this.issuedDate = const Value.absent(),
@@ -3113,6 +3155,7 @@ class PaymentsCompanion extends UpdateCompanion<Payment> {
     Expression<String>? id,
     Expression<String>? projectId,
     Expression<double>? amount,
+    Expression<double>? paidAmount,
     Expression<String>? currency,
     Expression<String>? status,
     Expression<DateTime>? issuedDate,
@@ -3127,6 +3170,7 @@ class PaymentsCompanion extends UpdateCompanion<Payment> {
       if (id != null) 'id': id,
       if (projectId != null) 'project_id': projectId,
       if (amount != null) 'amount': amount,
+      if (paidAmount != null) 'paid_amount': paidAmount,
       if (currency != null) 'currency': currency,
       if (status != null) 'status': status,
       if (issuedDate != null) 'issued_date': issuedDate,
@@ -3143,6 +3187,7 @@ class PaymentsCompanion extends UpdateCompanion<Payment> {
     Value<String>? id,
     Value<String>? projectId,
     Value<double>? amount,
+    Value<double>? paidAmount,
     Value<String>? currency,
     Value<String>? status,
     Value<DateTime?>? issuedDate,
@@ -3157,6 +3202,7 @@ class PaymentsCompanion extends UpdateCompanion<Payment> {
       id: id ?? this.id,
       projectId: projectId ?? this.projectId,
       amount: amount ?? this.amount,
+      paidAmount: paidAmount ?? this.paidAmount,
       currency: currency ?? this.currency,
       status: status ?? this.status,
       issuedDate: issuedDate ?? this.issuedDate,
@@ -3180,6 +3226,9 @@ class PaymentsCompanion extends UpdateCompanion<Payment> {
     }
     if (amount.present) {
       map['amount'] = Variable<double>(amount.value);
+    }
+    if (paidAmount.present) {
+      map['paid_amount'] = Variable<double>(paidAmount.value);
     }
     if (currency.present) {
       map['currency'] = Variable<String>(currency.value);
@@ -3217,6 +3266,7 @@ class PaymentsCompanion extends UpdateCompanion<Payment> {
           ..write('id: $id, ')
           ..write('projectId: $projectId, ')
           ..write('amount: $amount, ')
+          ..write('paidAmount: $paidAmount, ')
           ..write('currency: $currency, ')
           ..write('status: $status, ')
           ..write('issuedDate: $issuedDate, ')
@@ -5206,6 +5256,7 @@ typedef $$PaymentsTableCreateCompanionBuilder =
       required String id,
       required String projectId,
       required double amount,
+      Value<double> paidAmount,
       Value<String> currency,
       Value<String> status,
       Value<DateTime?> issuedDate,
@@ -5221,6 +5272,7 @@ typedef $$PaymentsTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> projectId,
       Value<double> amount,
+      Value<double> paidAmount,
       Value<String> currency,
       Value<String> status,
       Value<DateTime?> issuedDate,
@@ -5270,6 +5322,11 @@ class $$PaymentsTableFilterComposer
 
   ColumnFilters<double> get amount => $composableBuilder(
     column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get paidAmount => $composableBuilder(
+    column: $table.paidAmount,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -5356,6 +5413,11 @@ class $$PaymentsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get paidAmount => $composableBuilder(
+    column: $table.paidAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get currency => $composableBuilder(
     column: $table.currency,
     builder: (column) => ColumnOrderings(column),
@@ -5434,6 +5496,11 @@ class $$PaymentsTableAnnotationComposer
 
   GeneratedColumn<double> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<double> get paidAmount => $composableBuilder(
+    column: $table.paidAmount,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get currency =>
       $composableBuilder(column: $table.currency, builder: (column) => column);
@@ -5516,6 +5583,7 @@ class $$PaymentsTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> projectId = const Value.absent(),
                 Value<double> amount = const Value.absent(),
+                Value<double> paidAmount = const Value.absent(),
                 Value<String> currency = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> issuedDate = const Value.absent(),
@@ -5529,6 +5597,7 @@ class $$PaymentsTableTableManager
                 id: id,
                 projectId: projectId,
                 amount: amount,
+                paidAmount: paidAmount,
                 currency: currency,
                 status: status,
                 issuedDate: issuedDate,
@@ -5544,6 +5613,7 @@ class $$PaymentsTableTableManager
                 required String id,
                 required String projectId,
                 required double amount,
+                Value<double> paidAmount = const Value.absent(),
                 Value<String> currency = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime?> issuedDate = const Value.absent(),
@@ -5557,6 +5627,7 @@ class $$PaymentsTableTableManager
                 id: id,
                 projectId: projectId,
                 amount: amount,
+                paidAmount: paidAmount,
                 currency: currency,
                 status: status,
                 issuedDate: issuedDate,

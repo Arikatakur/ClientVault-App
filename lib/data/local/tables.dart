@@ -101,6 +101,9 @@ class Payments extends Table {
   TextColumn get id => text()();
   TextColumn get projectId => text().references(Projects, #id)();
   RealColumn get amount => real()();
+
+  /// How much has been received so far (supports partial / split payments).
+  RealColumn get paidAmount => real().withDefault(const Constant(0))();
   TextColumn get currency => text().withDefault(const Constant('USD'))();
 
   /// `draft | sent | paid`.

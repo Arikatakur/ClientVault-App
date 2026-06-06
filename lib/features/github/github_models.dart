@@ -60,3 +60,38 @@ class GitHubRepo {
     );
   }
 }
+
+/// A single commit, trimmed to what the commit browser shows.
+class GitHubCommit {
+  const GitHubCommit({
+    required this.sha,
+    required this.message,
+    this.authorName,
+    this.date,
+  });
+
+  final String sha;
+  final String message;
+  final String? authorName;
+  final DateTime? date;
+
+  String get shortSha => sha.length >= 7 ? sha.substring(0, 7) : sha;
+
+  /// The first line of the message (the commit summary).
+  String get summary {
+    final newline = message.indexOf('\n');
+    return newline == -1 ? message : message.substring(0, newline);
+  }
+
+  factory GitHubCommit.fromJson(Map<String, dynamic> json) {
+    final commit = json['commit'] as Map<String, dynamic>?;
+    final author = commit?['author'] as Map<String, dynamic>?;
+    final date = author?['date'] as String?;
+    return GitHubCommit(
+      sha: json['sha'] as String? ?? '',
+      message: commit?['message'] as String? ?? '',
+      authorName: author?['name'] as String?,
+      date: date == null ? null : DateTime.tryParse(date),
+    );
+  }
+}

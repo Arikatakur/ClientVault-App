@@ -63,7 +63,7 @@ class SettingsScreen extends ConsumerWidget {
             leading: Icon(Icons.info_outline, color: AppColors.textSecondary),
             title: Text('Version'),
             trailing: Text(
-              '0.6.0',
+              '0.7.0',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),

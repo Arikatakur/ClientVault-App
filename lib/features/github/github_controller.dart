@@ -36,6 +36,14 @@ final repoStatusProvider = FutureProvider.family<GitHubRepo, String>((
   return ref.read(githubControllerProvider.notifier).repository(fullName);
 });
 
+/// Recent commits for one repository, keyed by "owner/name".
+final repoCommitsProvider = FutureProvider.family<List<GitHubCommit>, String>((
+  ref,
+  fullName,
+) {
+  return ref.read(githubControllerProvider.notifier).commits(fullName);
+});
+
 /// Owns the GitHub token (in secure storage) and the live client.
 class GitHubController extends Notifier<GitHubState> {
   GitHubClient? _client;
@@ -102,5 +110,13 @@ class GitHubController extends Notifier<GitHubState> {
       throw const GitHubException('Connect GitHub to view repository status.');
     }
     return client.repository(fullName);
+  }
+
+  Future<List<GitHubCommit>> commits(String fullName) {
+    final client = _client;
+    if (client == null) {
+      throw const GitHubException('Connect GitHub to view commits.');
+    }
+    return client.commits(fullName);
   }
 }

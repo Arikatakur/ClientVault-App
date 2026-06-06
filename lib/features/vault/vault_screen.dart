@@ -8,41 +8,12 @@ import 'widgets/vault_setup_view.dart';
 import 'widgets/vault_unlocked_view.dart';
 
 /// Entry point for the Vault tab. Renders the right surface for the current
-/// [VaultStatus] and auto-locks the vault whenever the app is backgrounded.
-class VaultScreen extends ConsumerStatefulWidget {
+/// [VaultStatus]. Auto-lock is handled app-wide by `AutoLockScope`.
+class VaultScreen extends ConsumerWidget {
   const VaultScreen({super.key});
 
   @override
-  ConsumerState<VaultScreen> createState() => _VaultScreenState();
-}
-
-class _VaultScreenState extends ConsumerState<VaultScreen>
-    with WidgetsBindingObserver {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addObserver(this);
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    final notifier = ref.read(vaultControllerProvider.notifier);
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.hidden) {
-      notifier.onPaused();
-    } else if (state == AppLifecycleState.resumed) {
-      notifier.onResumed();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final status = ref.watch(vaultControllerProvider);
     return switch (status) {
       VaultStatus.loading => const Scaffold(

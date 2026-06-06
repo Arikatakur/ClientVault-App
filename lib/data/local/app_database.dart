@@ -13,7 +13,7 @@ class AppDatabase extends _$AppDatabase {
     : super(executor ?? driftDatabase(name: 'clientvault'));
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -26,6 +26,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await m.createTable(payments);
+      }
+      if (from < 4) {
+        await m.addColumn(payments, payments.paidAmount);
+        // Treat already-"paid" rows as fully paid under the new partial model.
+        await customStatement(
+          "UPDATE payments SET paid_amount = amount WHERE status = 'paid'",
+        );
       }
     },
   );

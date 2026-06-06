@@ -10,6 +10,7 @@ import '../../data/local/app_database.dart';
 import '../../data/providers/database_provider.dart';
 import '../../shared/widgets/status_chip.dart';
 import '../github/github_controller.dart';
+import '../github/repo_commits_screen.dart';
 import '../github/widgets/repo_picker_sheet.dart';
 import '../payments/payment_status.dart';
 import '../payments/widgets/payment_form_sheet.dart';
@@ -222,9 +223,10 @@ class _PaymentsSection extends ConsumerWidget {
               0,
               (sum, p) => sum + p.amount,
             );
-            final paid = payments
-                .where((p) => p.status == PaymentStatus.paid.value)
-                .fold<double>(0, (sum, p) => sum + p.amount);
+            final paid = payments.fold<double>(
+              0,
+              (sum, p) => sum + p.paidAmount,
+            );
             final outstanding = invoiced - paid;
             return Column(
               children: [
@@ -302,20 +304,25 @@ class _PaymentTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final overdue = isPaymentOverdue(payment);
-    final status = PaymentStatus.fromValue(payment.status);
-    final chipLabel = overdue ? 'Overdue' : status.label;
-    final chipColor = overdue ? AppColors.danger : status.color;
+    final display = paymentDisplay(payment);
+    final isPartial =
+        payment.paidAmount > 0 && payment.paidAmount < payment.amount;
+    final String subtitle;
+    if (isPartial) {
+      subtitle =
+          '${formatMoney(payment.paidAmount, payment.currency)} of '
+          '${formatMoney(payment.amount, payment.currency)} paid';
+    } else if (payment.dueDate != null) {
+      subtitle = 'Due ${formatDate(payment.dueDate!)}';
+    } else {
+      subtitle = 'No due date';
+    }
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       child: ListTile(
         title: Text(formatMoney(payment.amount, payment.currency)),
-        subtitle: Text(
-          payment.dueDate != null
-              ? 'Due ${formatDate(payment.dueDate!)}'
-              : 'No due date',
-        ),
-        trailing: StatusChip(label: chipLabel, color: chipColor),
+        subtitle: Text(subtitle),
+        trailing: StatusChip(label: display.label, color: display.color),
         onTap: () => showPaymentSheet(
           context,
           projectId: project.id,
@@ -412,6 +419,16 @@ class _RepoStatusCard extends ConsumerWidget {
                 const Icon(Icons.code, color: AppColors.accent),
                 const SizedBox(width: AppSpacing.md),
                 Expanded(child: Text(fullName, style: textTheme.titleSmall)),
+                IconButton(
+                  icon: const Icon(Icons.history, size: 18),
+                  tooltip: 'View commits',
+                  color: AppColors.textSecondary,
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => RepoCommitsScreen(fullName: fullName),
+                    ),
+                  ),
+                ),
                 IconButton(
                   icon: const Icon(Icons.link_off, size: 18),
                   tooltip: 'Unlink',

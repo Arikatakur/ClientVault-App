@@ -10,7 +10,7 @@ import '../../../data/local/app_database.dart';
 import '../../../data/providers/database_provider.dart';
 import '../project_status.dart';
 
-const List<String> _currencies = ['USD', 'EUR', 'GBP', 'AUD', 'CAD'];
+const List<String> _currencies = ['USD', 'ILS', 'EUR', 'GBP', 'AUD', 'CAD'];
 
 /// Shows the create/edit project form. Pass [existing] to edit. Pass
 /// [lockedClientId] to pre-select and hide the client picker (e.g. when adding

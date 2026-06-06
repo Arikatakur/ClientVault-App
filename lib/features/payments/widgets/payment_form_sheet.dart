@@ -10,7 +10,7 @@ import '../../../data/local/app_database.dart';
 import '../../../data/providers/database_provider.dart';
 import '../payment_status.dart';
 
-const List<String> _currencies = ['USD', 'EUR', 'GBP', 'AUD', 'CAD'];
+const List<String> _currencies = ['USD', 'ILS', 'EUR', 'GBP', 'AUD', 'CAD'];
 
 /// Shows the add/edit payment form for a project. Writes to the database and
 /// pops itself; pass [existing] to edit.
@@ -49,6 +49,7 @@ class _PaymentForm extends ConsumerStatefulWidget {
 
 class _PaymentFormState extends ConsumerState<_PaymentForm> {
   late final TextEditingController _amount;
+  late final TextEditingController _paidAmount;
   late final TextEditingController _notes;
 
   late PaymentStatus _status;
@@ -64,6 +65,9 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
     super.initState();
     final payment = widget.existing;
     _amount = TextEditingController(text: _amountToText(payment?.amount));
+    _paidAmount = TextEditingController(
+      text: _amountToText(payment?.paidAmount),
+    );
     _notes = TextEditingController(text: payment?.notes ?? '');
     _status = payment != null
         ? PaymentStatus.fromValue(payment.status)
@@ -77,6 +81,7 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
   @override
   void dispose() {
     _amount.dispose();
+    _paidAmount.dispose();
     _notes.dispose();
     super.dispose();
   }
@@ -108,6 +113,7 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
       setState(() => _error = 'Enter a valid amount.');
       return;
     }
+    final paidAmount = double.tryParse(_paidAmount.text.trim()) ?? 0.0;
     setState(() {
       _busy = true;
       _error = null;
@@ -123,6 +129,7 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
             id: newId(),
             projectId: widget.projectId,
             amount: amount,
+            paidAmount: Value(paidAmount),
             currency: Value(_currency),
             status: Value(_status.value),
             issuedDate: Value(_issued),
@@ -138,6 +145,7 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
           existing.id,
           PaymentsCompanion(
             amount: Value(amount),
+            paidAmount: Value(paidAmount),
             currency: Value(_currency),
             status: Value(_status.value),
             issuedDate: Value(_issued),
@@ -235,6 +243,17 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
                 ),
               ],
             ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _paidAmount,
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              decoration: const InputDecoration(
+                labelText: 'Amount paid so far',
+                helperText: 'Leave at 0 if unpaid; partial amounts are fine.',
+              ),
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text('Status', style: textTheme.labelLarge),
             const SizedBox(height: AppSpacing.sm),
@@ -247,8 +266,9 @@ class _PaymentFormState extends ConsumerState<_PaymentForm> {
                     selected: _status == status,
                     onSelected: (_) => setState(() {
                       _status = status;
-                      if (status == PaymentStatus.paid && _paid == null) {
-                        _paid = DateTime.now();
+                      if (status == PaymentStatus.paid) {
+                        _paid ??= DateTime.now();
+                        _paidAmount.text = _amount.text;
                       }
                     }),
                     selectedColor: status.color.withValues(alpha: 0.22),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/router/app_router.dart';
 import '../core/theme/app_theme.dart';
+import '../features/vault/auto_lock_scope.dart';
 
 /// Root application widget.
 ///
@@ -19,6 +20,8 @@ class ClientVaultApp extends StatelessWidget {
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.dark,
       routerConfig: appRouter,
+      builder: (context, child) =>
+          AutoLockScope(child: child ?? const SizedBox.shrink()),
     );
   }
 }
