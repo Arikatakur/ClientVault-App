@@ -4,6 +4,18 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.9.0] - 2026-06-06
+
+**File attachments.** Keep client and project documents in the app.
+
+### Added
+- **Attach files** (PDF, image, or any document) to a client or a project, from their detail screens — e.g. save a client's bank-details PDF and open it later.
+- **In-app PDF viewer** with pinch-to-zoom (pdfx); other file types open in the system viewer / Quick Look (open_filex).
+- Files are copied into the app's on-device storage and listed with their size; deleting removes both the file and its record.
+
+### Changed
+- Database schema migrated to **v5** (additive: `attachments`). Deleting a client or project now also removes its attached files.
+
 ## [0.8.0] - 2026-06-06
 
 **GitHub browser.** See what's happening in a linked repo.
