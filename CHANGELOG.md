@@ -4,6 +4,16 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.8.0] - 2026-06-06
+
+**GitHub browser.** See what's happening in a linked repo.
+
+### Added
+- **Issues and pull requests** for a linked repository, alongside commits, in a tabbed **GitHub browser** (opened from the project's repo card). Each shows state (open / closed / draft), author, and age.
+
+### Changed
+- The repo card's GitHub action now opens commits, issues, and pull requests together, replacing the commits-only screen.
+
 ## [0.7.0] - 2026-06-06
 
 **Feedback round.** Improvements from on-device testing.
