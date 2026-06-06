@@ -4,6 +4,21 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.5.0] - 2026-06-06
+
+**Phase 3 — Payments.** Invoice/payment tracking per project.
+
+### Added
+- **Payments per project**: add / edit / delete payment lines with amount, currency, status (draft / sent / paid), and issued/due/paid dates.
+- **Project roll-ups** on the project detail screen — Invoiced, Paid, and Outstanding totals.
+- **Overdue flag**, derived (unpaid and past its due date) so it never goes stale.
+- **Live "Outstanding"** total on the dashboard (sum of all unpaid amounts).
+- Overdue-logic unit tests.
+
+### Changed
+- Database schema migrated to **v3** (additive: `payments`); existing data is preserved.
+- Deleting a project (or a client) now cascades to its payments in a transaction, so no rows are orphaned.
+
 ## [0.4.0] - 2026-06-06
 
 **Phase 4 — GitHub.** Connect an account and link repositories to projects.
