@@ -30,10 +30,36 @@ final vaultControllerProvider = NotifierProvider<VaultController, VaultStatus>(
   VaultController.new,
 );
 
+/// Auto-lock delay (seconds) after the app is backgrounded. 0 = immediately.
+final lockTimeoutProvider = NotifierProvider<LockTimeoutController, int>(
+  LockTimeoutController.new,
+);
+
+class LockTimeoutController extends Notifier<int> {
+  late SecureStore _secure;
+
+  @override
+  int build() {
+    _secure = ref.watch(secureStoreProvider);
+    _load();
+    return 0;
+  }
+
+  Future<void> _load() async {
+    state = await _secure.readLockTimeout();
+  }
+
+  Future<void> set(int seconds) async {
+    state = seconds;
+    await _secure.writeLockTimeout(seconds);
+  }
+}
+
 /// Owns the in-memory data key (DEK) and every operation that touches it.
 /// Nothing else in the app reads or holds key material.
 class VaultController extends Notifier<VaultStatus> {
   SecretKey? _dek; // in-memory data key; null whenever the vault is locked
+  DateTime? _pausedAt; // when the app was backgrounded (for timed auto-lock)
 
   late AppDatabase _db;
   late CryptoService _crypto;
@@ -142,6 +168,83 @@ class VaultController extends Notifier<VaultStatus> {
     _dek = null;
     if (state == VaultStatus.unlocked) {
       state = VaultStatus.locked;
+    }
+  }
+
+  /// Re-wraps the existing data key under a new master password (the items are
+  /// not re-encrypted). Returns false if [currentPassword] is wrong. Any
+  /// biometric-stored DEK stays valid, since the DEK itself is unchanged.
+  Future<bool> changeMasterPassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
+    final config = await _db.getVaultConfig();
+    if (config == null) return false;
+
+    final currentKek = await _crypto.deriveKek(
+      currentPassword,
+      config.kdfSalt,
+      KdfParams(
+        memory: config.kdfMemory,
+        iterations: config.kdfIterations,
+        parallelism: config.kdfParallelism,
+      ),
+    );
+
+    final newSalt = _crypto.newSalt();
+    const params = KdfParams.defaults;
+    final SealedBytes wrapped;
+    try {
+      final dekBytes = await _crypto.open(
+        SealedBytes(
+          cipherText: config.wrappedDek,
+          nonce: config.wrappedDekNonce,
+          mac: config.wrappedDekMac,
+        ),
+        currentKek,
+      );
+      final newKek = await _crypto.deriveKek(newPassword, newSalt, params);
+      wrapped = await _crypto.seal(dekBytes, newKek);
+    } on SecretBoxAuthenticationError {
+      return false; // wrong current password
+    }
+
+    await _db.saveVaultConfig(
+      VaultConfigsCompanion.insert(
+        id: vaultConfigId,
+        kdfSalt: newSalt,
+        kdfMemory: params.memory,
+        kdfIterations: params.iterations,
+        kdfParallelism: params.parallelism,
+        wrappedDek: Uint8List.fromList(wrapped.cipherText),
+        wrappedDekNonce: Uint8List.fromList(wrapped.nonce),
+        wrappedDekMac: Uint8List.fromList(wrapped.mac),
+        createdAt: config.createdAt,
+        updatedAt: DateTime.now(),
+      ),
+    );
+    return true;
+  }
+
+  /// Called when the app is backgrounded: lock now, or arm the timed lock.
+  void onPaused() {
+    if (state != VaultStatus.unlocked) return;
+    if (ref.read(lockTimeoutProvider) == 0) {
+      lock();
+    } else {
+      _pausedAt = DateTime.now();
+    }
+  }
+
+  /// Called when the app returns: lock if it was away longer than the timeout.
+  void onResumed() {
+    if (state != VaultStatus.unlocked) return;
+    final pausedAt = _pausedAt;
+    _pausedAt = null;
+    if (pausedAt == null) return;
+    if (DateTime.now().difference(pausedAt).inSeconds >=
+        ref.read(lockTimeoutProvider)) {
+      lock();
     }
   }
 

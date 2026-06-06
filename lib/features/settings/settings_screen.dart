@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../github/github_controller.dart';
+import '../vault/vault_controller.dart';
+import '../vault/widgets/change_master_password_sheet.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -17,19 +19,27 @@ class SettingsScreen extends ConsumerWidget {
       GitHubStatus.loading => 'Checking…',
       _ => 'Not connected',
     };
+    final vaultStatus = ref.watch(vaultControllerProvider);
+    final lockTimeout = ref.watch(lockTimeoutProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
           const _SectionHeader('Security'),
-          const _SoonTile(
-            icon: Icons.timer_outlined,
-            title: 'Auto-lock timeout',
+          ListTile(
+            leading: const Icon(Icons.timer_outlined, color: AppColors.textSecondary),
+            title: const Text('Auto-lock'),
+            subtitle: Text(_timeoutLabel(lockTimeout)),
+            onTap: () => _pickTimeout(context, ref),
           ),
-          const _SoonTile(
-            icon: Icons.password_outlined,
-            title: 'Change master password',
+          ListTile(
+            leading: const Icon(
+              Icons.password_outlined,
+              color: AppColors.textSecondary,
+            ),
+            title: const Text('Change master password'),
+            onTap: () => _changePassword(context, vaultStatus),
           ),
           const _SectionHeader('Integrations'),
           ListTile(
@@ -53,13 +63,63 @@ class SettingsScreen extends ConsumerWidget {
             leading: Icon(Icons.info_outline, color: AppColors.textSecondary),
             title: Text('Version'),
             trailing: Text(
-              '0.5.0',
+              '0.6.0',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
         ],
       ),
     );
+  }
+}
+
+String _timeoutLabel(int seconds) => switch (seconds) {
+  0 => 'Immediately',
+  60 => 'After 1 minute',
+  300 => 'After 5 minutes',
+  _ => 'After ${seconds}s',
+};
+
+Future<void> _pickTimeout(BuildContext context, WidgetRef ref) async {
+  final current = ref.read(lockTimeoutProvider);
+  final choice = await showModalBottomSheet<int>(
+    context: context,
+    showDragHandle: true,
+    builder: (sheetContext) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final option in const [0, 60, 300])
+            ListTile(
+              title: Text(_timeoutLabel(option)),
+              trailing: option == current
+                  ? const Icon(Icons.check, color: AppColors.accent)
+                  : null,
+              onTap: () => Navigator.of(sheetContext).pop(option),
+            ),
+        ],
+      ),
+    ),
+  );
+  if (choice != null) {
+    await ref.read(lockTimeoutProvider.notifier).set(choice);
+  }
+}
+
+void _changePassword(BuildContext context, VaultStatus status) {
+  switch (status) {
+    case VaultStatus.locked:
+    case VaultStatus.unlocked:
+      showChangeMasterPasswordSheet(context);
+    case VaultStatus.uninitialized:
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Set up your vault first.')),
+      );
+    case VaultStatus.loading:
+    case VaultStatus.unavailable:
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('The vault is available on-device.')),
+      );
   }
 }
 

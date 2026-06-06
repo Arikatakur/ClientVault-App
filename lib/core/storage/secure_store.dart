@@ -11,6 +11,7 @@ class SecureStore {
 
   static const String _dekKey = 'vault_dek_b64';
   static const String _githubTokenKey = 'github_token';
+  static const String _lockTimeoutKey = 'lock_timeout_seconds';
 
   // --- Vault DEK (biometric unlock) ------------------------------------------
 
@@ -31,4 +32,14 @@ class SecureStore {
   Future<String?> readGithubToken() => _storage.read(key: _githubTokenKey);
 
   Future<void> deleteGithubToken() => _storage.delete(key: _githubTokenKey);
+
+  // --- Preferences -----------------------------------------------------------
+
+  Future<void> writeLockTimeout(int seconds) =>
+      _storage.write(key: _lockTimeoutKey, value: '$seconds');
+
+  Future<int> readLockTimeout() async {
+    final value = await _storage.read(key: _lockTimeoutKey);
+    return int.tryParse(value ?? '') ?? 0;
+  }
 }

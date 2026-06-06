@@ -32,9 +32,12 @@ class _VaultScreenState extends ConsumerState<VaultScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    final notifier = ref.read(vaultControllerProvider.notifier);
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.hidden) {
-      ref.read(vaultControllerProvider.notifier).lock();
+      notifier.onPaused();
+    } else if (state == AppLifecycleState.resumed) {
+      notifier.onResumed();
     }
   }
 
