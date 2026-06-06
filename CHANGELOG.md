@@ -4,6 +4,18 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.6.0] - 2026-06-06
+
+**Phase 5 (part 1) — Vault security polish.**
+
+### Added
+- **Change master password** (Settings → Security): re-derives the key and re-wraps the existing data key, so stored items are never re-encrypted and biometric unlock keeps working. A wrong current password is rejected.
+- **Configurable auto-lock**: lock immediately, after 1 minute, or after 5 minutes of being backgrounded.
+- Crypto re-wrap unit test (the new key opens, the old key is rejected).
+
+### Changed
+- Settings security tiles are now functional rather than placeholders.
+
 ## [0.5.0] - 2026-06-06
 
 **Phase 3 — Payments.** Invoice/payment tracking per project.
