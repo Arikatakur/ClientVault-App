@@ -44,6 +44,22 @@ final repoCommitsProvider = FutureProvider.family<List<GitHubCommit>, String>((
   return ref.read(githubControllerProvider.notifier).commits(fullName);
 });
 
+/// Issues for one repository, keyed by "owner/name".
+final repoIssuesProvider = FutureProvider.family<List<GitHubIssue>, String>((
+  ref,
+  fullName,
+) {
+  return ref.read(githubControllerProvider.notifier).issues(fullName);
+});
+
+/// Pull requests for one repository, keyed by "owner/name".
+final repoPullsProvider = FutureProvider.family<List<GitHubIssue>, String>((
+  ref,
+  fullName,
+) {
+  return ref.read(githubControllerProvider.notifier).pullRequests(fullName);
+});
+
 /// Owns the GitHub token (in secure storage) and the live client.
 class GitHubController extends Notifier<GitHubState> {
   GitHubClient? _client;
@@ -118,5 +134,21 @@ class GitHubController extends Notifier<GitHubState> {
       throw const GitHubException('Connect GitHub to view commits.');
     }
     return client.commits(fullName);
+  }
+
+  Future<List<GitHubIssue>> issues(String fullName) {
+    final client = _client;
+    if (client == null) {
+      throw const GitHubException('Connect GitHub to view issues.');
+    }
+    return client.issues(fullName);
+  }
+
+  Future<List<GitHubIssue>> pullRequests(String fullName) {
+    final client = _client;
+    if (client == null) {
+      throw const GitHubException('Connect GitHub to view pull requests.');
+    }
+    return client.pullRequests(fullName);
   }
 }

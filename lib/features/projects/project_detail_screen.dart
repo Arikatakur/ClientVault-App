@@ -10,7 +10,7 @@ import '../../data/local/app_database.dart';
 import '../../data/providers/database_provider.dart';
 import '../../shared/widgets/status_chip.dart';
 import '../github/github_controller.dart';
-import '../github/repo_commits_screen.dart';
+import '../github/repo_browser_screen.dart';
 import '../github/widgets/repo_picker_sheet.dart';
 import '../payments/payment_status.dart';
 import '../payments/widgets/payment_form_sheet.dart';
@@ -420,12 +420,12 @@ class _RepoStatusCard extends ConsumerWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(child: Text(fullName, style: textTheme.titleSmall)),
                 IconButton(
-                  icon: const Icon(Icons.history, size: 18),
-                  tooltip: 'View commits',
+                  icon: const Icon(Icons.travel_explore, size: 18),
+                  tooltip: 'Commits, issues & pull requests',
                   color: AppColors.textSecondary,
                   onPressed: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (_) => RepoCommitsScreen(fullName: fullName),
+                      builder: (_) => RepoBrowserScreen(fullName: fullName),
                     ),
                   ),
                 ),

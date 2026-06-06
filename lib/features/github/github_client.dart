@@ -61,6 +61,28 @@ class GitHubClient {
     return list.map(GitHubCommit.fromJson).toList();
   }
 
+  Future<List<GitHubIssue>> issues(String fullName) async {
+    final data = await _get(
+      '/repos/$fullName/issues',
+      query: {'state': 'all', 'per_page': 30},
+    );
+    final list = (data as List<dynamic>).cast<Map<String, dynamic>>();
+    // The issues endpoint also returns PRs; keep only true issues here.
+    return list
+        .where((json) => !json.containsKey('pull_request'))
+        .map(GitHubIssue.fromJson)
+        .toList();
+  }
+
+  Future<List<GitHubIssue>> pullRequests(String fullName) async {
+    final data = await _get(
+      '/repos/$fullName/pulls',
+      query: {'state': 'all', 'per_page': 30},
+    );
+    final list = (data as List<dynamic>).cast<Map<String, dynamic>>();
+    return list.map(GitHubIssue.fromJson).toList();
+  }
+
   Future<dynamic> _get(String path, {Map<String, dynamic>? query}) async {
     try {
       final response = await _dio.get<dynamic>(path, queryParameters: query);

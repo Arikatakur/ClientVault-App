@@ -49,4 +49,26 @@ void main() {
     expect(user.name, isNull);
     expect(user.avatarUrl, 'x');
   });
+
+  test('GitHubIssue.fromJson distinguishes issues from pull requests', () {
+    final issue = GitHubIssue.fromJson({
+      'number': 5,
+      'title': 'A bug',
+      'state': 'open',
+      'user': {'login': 'octo'},
+      'comments': 2,
+    });
+    expect(issue.isPullRequest, isFalse);
+    expect(issue.number, 5);
+    expect(issue.authorLogin, 'octo');
+
+    final pull = GitHubIssue.fromJson({
+      'number': 6,
+      'title': 'A feature',
+      'state': 'closed',
+      'pull_request': {'url': 'x'},
+    });
+    expect(pull.isPullRequest, isTrue);
+    expect(pull.state, 'closed');
+  });
 }

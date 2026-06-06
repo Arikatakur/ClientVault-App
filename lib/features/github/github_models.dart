@@ -95,3 +95,43 @@ class GitHubCommit {
     );
   }
 }
+
+/// An issue or pull request (GitHub treats both as "issues").
+class GitHubIssue {
+  const GitHubIssue({
+    required this.number,
+    required this.title,
+    required this.state,
+    required this.isPullRequest,
+    this.authorLogin,
+    this.comments = 0,
+    this.draft = false,
+    this.createdAt,
+  });
+
+  final int number;
+  final String title;
+
+  /// `open` or `closed`.
+  final String state;
+  final bool isPullRequest;
+  final String? authorLogin;
+  final int comments;
+  final bool draft;
+  final DateTime? createdAt;
+
+  factory GitHubIssue.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] as Map<String, dynamic>?;
+    final created = json['created_at'] as String?;
+    return GitHubIssue(
+      number: (json['number'] as num).toInt(),
+      title: json['title'] as String? ?? '',
+      state: json['state'] as String? ?? 'open',
+      isPullRequest: json.containsKey('pull_request') || json['draft'] != null,
+      authorLogin: user?['login'] as String?,
+      comments: (json['comments'] as num?)?.toInt() ?? 0,
+      draft: json['draft'] as bool? ?? false,
+      createdAt: created == null ? null : DateTime.tryParse(created),
+    );
+  }
+}
