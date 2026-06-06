@@ -9,6 +9,7 @@ import '../../core/utils/format.dart';
 import '../../data/local/app_database.dart';
 import '../../data/providers/database_provider.dart';
 import '../../shared/widgets/status_chip.dart';
+import '../attachments/widgets/attachments_section.dart';
 import '../github/github_controller.dart';
 import '../github/repo_browser_screen.dart';
 import '../github/widgets/repo_picker_sheet.dart';
@@ -163,6 +164,7 @@ class _ProjectDetailView extends ConsumerWidget {
             ),
           ],
           _GitHubSection(project: project),
+          AttachmentsSection(projectId: project.id),
         ],
       ),
     );

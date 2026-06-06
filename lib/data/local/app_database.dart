@@ -7,13 +7,15 @@ part 'app_database.g.dart';
 
 /// The on-device SQLite database. `driftDatabase` opens a native, file-backed
 /// database on iOS/Android (and desktop); a test executor can be injected.
-@DriftDatabase(tables: [Clients, Projects, VaultItems, VaultConfigs, Payments])
+@DriftDatabase(
+  tables: [Clients, Projects, VaultItems, VaultConfigs, Payments, Attachments],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor])
     : super(executor ?? driftDatabase(name: 'clientvault'));
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -33,6 +35,9 @@ class AppDatabase extends _$AppDatabase {
         await customStatement(
           "UPDATE payments SET paid_amount = amount WHERE status = 'paid'",
         );
+      }
+      if (from < 5) {
+        await m.createTable(attachments);
       }
     },
   );
@@ -74,6 +79,9 @@ class AppDatabase extends _$AppDatabase {
         await (delete(payments)..where((p) => p.projectId.isIn(projectIds)))
             .go();
       }
+      await (delete(attachments)
+            ..where((a) => a.clientId.equals(id) | a.projectId.isIn(projectIds)))
+          .go();
       await (delete(projects)..where((p) => p.clientId.equals(id))).go();
       await (delete(clients)..where((c) => c.id.equals(id))).go();
     });
@@ -113,10 +121,11 @@ class AppDatabase extends _$AppDatabase {
   Future<int> updateProject(String id, ProjectsCompanion entry) =>
       (update(projects)..where((p) => p.id.equals(id))).write(entry);
 
-  /// Deletes a project and its payments in a single transaction.
+  /// Deletes a project with its payments and attachments in one transaction.
   Future<void> deleteProject(String id) {
     return transaction(() async {
       await (delete(payments)..where((p) => p.projectId.equals(id))).go();
+      await (delete(attachments)..where((a) => a.projectId.equals(id))).go();
       await (delete(projects)..where((p) => p.id.equals(id))).go();
     });
   }
@@ -176,6 +185,34 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> deletePayment(String id) =>
       (delete(payments)..where((p) => p.id.equals(id))).go();
+
+  // --- Attachments -----------------------------------------------------------
+
+  Stream<List<Attachment>> watchAttachmentsForClient(String clientId) {
+    return (select(attachments)
+          ..where((a) => a.clientId.equals(clientId))
+          ..orderBy([
+            (a) =>
+                OrderingTerm(expression: a.createdAt, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
+  Stream<List<Attachment>> watchAttachmentsForProject(String projectId) {
+    return (select(attachments)
+          ..where((a) => a.projectId.equals(projectId))
+          ..orderBy([
+            (a) =>
+                OrderingTerm(expression: a.createdAt, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
+  Future<int> insertAttachment(AttachmentsCompanion entry) =>
+      into(attachments).insert(entry);
+
+  Future<int> deleteAttachment(String id) =>
+      (delete(attachments)..where((a) => a.id.equals(id))).go();
 }
 
 /// Primary key of the single [VaultConfigs] row.

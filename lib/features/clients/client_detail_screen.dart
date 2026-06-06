@@ -8,6 +8,7 @@ import '../../core/utils/format.dart';
 import '../../data/local/app_database.dart';
 import '../../data/providers/database_provider.dart';
 import '../../shared/widgets/status_chip.dart';
+import '../attachments/widgets/attachments_section.dart';
 import '../projects/project_status.dart';
 import '../projects/widgets/project_form_sheet.dart';
 import 'widgets/client_form_sheet.dart';
@@ -151,6 +152,7 @@ class _ClientDetailView extends ConsumerWidget {
               );
             },
           ),
+          AttachmentsSection(clientId: client.id),
         ],
       ),
     );

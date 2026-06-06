@@ -120,3 +120,20 @@ class Payments extends Table {
   @override
   Set<Column> get primaryKey => {id};
 }
+
+/// A file (PDF, image, document) attached to a client or project. The bytes
+/// live on disk under the app documents directory; [storedPath] is relative so
+/// it survives the iOS container path changing between launches.
+class Attachments extends Table {
+  TextColumn get id => text()();
+  TextColumn get clientId => text().nullable().references(Clients, #id)();
+  TextColumn get projectId => text().nullable().references(Projects, #id)();
+  TextColumn get fileName => text()();
+  TextColumn get storedPath => text()();
+  TextColumn get mimeType => text().nullable()();
+  IntColumn get sizeBytes => integer()();
+  DateTimeColumn get createdAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}

@@ -52,3 +52,15 @@ final projectPaymentsProvider = StreamProvider.family<List<Payment>, String>((
 ) {
   return ref.watch(databaseProvider).watchPaymentsForProject(projectId);
 });
+
+/// Reactive list of the files attached to one client.
+final clientAttachmentsProvider =
+    StreamProvider.family<List<Attachment>, String>((ref, clientId) {
+      return ref.watch(databaseProvider).watchAttachmentsForClient(clientId);
+    });
+
+/// Reactive list of the files attached to one project.
+final projectAttachmentsProvider =
+    StreamProvider.family<List<Attachment>, String>((ref, projectId) {
+      return ref.watch(databaseProvider).watchAttachmentsForProject(projectId);
+    });
