@@ -4,6 +4,19 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.10.0] - 2026-06-06
+
+**Reminders.** Get notified before payments and project deadlines — even when the app is closed.
+
+### Added
+- **Due-date reminders** — local notifications scheduled for unpaid payments and active project deadlines. They fire at 9:00 AM, with a configurable lead time (on the day, 1 day, 3 days, or 1 week before).
+- **Notifications settings** — a master toggle, the lead-time picker, and a "Send a test notification" action. Permission is requested on first launch.
+- Reminders re-sync automatically whenever payments or projects change and when the app returns to the foreground; tapping a reminder opens the related project.
+
+### Notes
+- All notifications are local/on-device — there is no push server. GitHub change notifications are planned for the next version.
+- Android schedules reminders inexactly (no exact-alarm permission required). iOS fires them via the system calendar trigger while the app is closed.
+
 ## [0.9.1] - 2026-06-06
 
 ### Fixed
