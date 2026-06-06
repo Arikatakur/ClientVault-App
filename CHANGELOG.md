@@ -4,6 +4,23 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.4.0] - 2026-06-06
+
+**Phase 4 — GitHub.** Connect an account and link repositories to projects.
+
+### Added
+- **Connect GitHub** with a fine-grained personal access token (Settings → GitHub). The token is validated against the API and stored only on-device, in the keychain/keystore.
+- **Link a repository to a project** from the project detail screen via a searchable repo picker.
+- **Live repository status** on linked projects: visibility, default branch, stars, open issues, and last push.
+- Read-only GitHub REST client (dio) with typed, user-facing errors (invalid token, rate limit, offline) and JSON-parsing unit tests.
+
+### Changed
+- Settings is now reactive and surfaces the connected GitHub account.
+- The shared `secureStoreProvider` moved to `core/storage` (vault DEK and GitHub token share one keychain instance).
+
+### Notes
+- Authentication uses a PAT rather than OAuth: with no backend, this keeps any client secret out of the app and stays tightly scoped and revocable. The OAuth device flow remains an option for a later version.
+
 ## [0.3.0] - 2026-06-06
 
 **Phase 2 — The Vault.** Encrypted, biometric-locked credential storage.
