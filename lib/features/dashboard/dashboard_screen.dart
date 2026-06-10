@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -43,62 +44,72 @@ class DashboardScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Dashboard')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
-          Text('Welcome back', style: textTheme.bodyMedium),
-          const SizedBox(height: 2),
-          Text('Your command center', style: textTheme.headlineMedium),
-          const SizedBox(height: AppSpacing.lg),
-          Row(
-            children: [
-              Expanded(
-                child: StatCard(
-                  icon: Icons.folder_open,
-                  label: 'Active projects',
-                  value: '$activeProjects',
+        children:
+            <Widget>[
+                  Text('Welcome back', style: textTheme.bodyMedium),
+                  const SizedBox(height: 2),
+                  Text('Your command center', style: textTheme.headlineMedium),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: StatCard(
+                          icon: Icons.folder_open,
+                          label: 'Active projects',
+                          value: activeProjects.toDouble(),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: StatCard(
+                          icon: Icons.people_alt_outlined,
+                          label: 'Clients',
+                          value: clientCount.toDouble(),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: StatCard(
+                          icon: Icons.account_balance_wallet_outlined,
+                          label: 'Outstanding',
+                          value: outstanding,
+                          format: (v) => formatMoney(v, 'USD'),
+                          accent: AppColors.warning,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: StatCard(
+                          icon: Icons.lock_outline,
+                          label: 'Vault items',
+                          value: vaultCount.toDouble(),
+                          accent: AppColors.success,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  Text('Recent activity', style: textTheme.titleMedium),
+                  const SizedBox(height: AppSpacing.md),
+                  _RecentActivity(
+                    clients: clients.value ?? const <Client>[],
+                    projects: projects.value ?? const <Project>[],
+                    payments: payments.value ?? const <Payment>[],
+                    vaultItems: vaultItems.value ?? const <VaultItem>[],
+                  ),
+                ]
+                .animate(interval: 40.ms)
+                .fadeIn(duration: 250.ms, curve: Curves.easeOut)
+                .slideY(
+                  begin: 0.05,
+                  end: 0,
+                  duration: 250.ms,
+                  curve: Curves.easeOut,
                 ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: StatCard(
-                  icon: Icons.people_alt_outlined,
-                  label: 'Clients',
-                  value: '$clientCount',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: StatCard(
-                  icon: Icons.account_balance_wallet_outlined,
-                  label: 'Outstanding',
-                  value: formatMoney(outstanding, 'USD'),
-                  accent: AppColors.warning,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: StatCard(
-                  icon: Icons.lock_outline,
-                  label: 'Vault items',
-                  value: '$vaultCount',
-                  accent: AppColors.success,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.xl),
-          Text('Recent activity', style: textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.md),
-          _RecentActivity(
-            clients: clients.value ?? const <Client>[],
-            projects: projects.value ?? const <Project>[],
-            payments: payments.value ?? const <Payment>[],
-            vaultItems: vaultItems.value ?? const <VaultItem>[],
-          ),
-        ],
       ),
     );
   }
@@ -190,7 +201,10 @@ class _RecentActivity extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               subtitle: Text(recent[i].subtitle),
-              trailing: Text(timeAgo(recent[i].time), style: textTheme.bodySmall),
+              trailing: Text(
+                timeAgo(recent[i].time),
+                style: textTheme.bodySmall,
+              ),
               dense: true,
             ),
           ],

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -19,6 +21,7 @@ class _VaultLockViewState extends ConsumerState<VaultLockView> {
   bool _busy = false;
   bool _biometricReady = false;
   String? _error;
+  int _attempts = 0; // re-runs the error shake on every failure
 
   @override
   void initState() {
@@ -49,10 +52,14 @@ class _VaultLockViewState extends ConsumerState<VaultLockView> {
     final ok = await ref
         .read(vaultControllerProvider.notifier)
         .unlock(_password.text);
-    if (!ok && mounted) {
+    if (ok) {
+      HapticFeedback.mediumImpact();
+    } else if (mounted) {
+      HapticFeedback.heavyImpact();
       setState(() {
         _busy = false;
         _error = 'Incorrect master password.';
+        _attempts++;
       });
     }
   }
@@ -61,9 +68,13 @@ class _VaultLockViewState extends ConsumerState<VaultLockView> {
     final ok = await ref
         .read(vaultControllerProvider.notifier)
         .unlockWithBiometrics();
-    if (!ok && mounted) {
+    if (ok) {
+      HapticFeedback.mediumImpact();
+    } else if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Biometric unlock was cancelled.')),
+        const SnackBar(
+          content: Text('Biometric unlock failed — use your master password.'),
+        ),
       );
     }
   }
@@ -80,19 +91,28 @@ class _VaultLockViewState extends ConsumerState<VaultLockView> {
           padding: const EdgeInsets.all(AppSpacing.lg),
           children: [
             Center(
-              child: Container(
-                height: 72,
-                width: 72,
-                decoration: const BoxDecoration(
-                  color: AppColors.accentSoft,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.lock_outline,
-                  size: 34,
-                  color: AppColors.accent,
-                ),
-              ),
+              child:
+                  Container(
+                        height: 72,
+                        width: 72,
+                        decoration: const BoxDecoration(
+                          color: AppColors.accentSoft,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.lock_outline,
+                          size: 34,
+                          color: AppColors.accent,
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 300.ms)
+                      .scale(
+                        begin: const Offset(0.85, 0.85),
+                        end: const Offset(1, 1),
+                        duration: 400.ms,
+                        curve: Curves.easeOutBack,
+                      ),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -126,7 +146,9 @@ class _VaultLockViewState extends ConsumerState<VaultLockView> {
             ),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.md),
-              Text(_error!, style: const TextStyle(color: AppColors.danger)),
+              Text(_error!, style: const TextStyle(color: AppColors.danger))
+                  .animate(key: ValueKey(_attempts))
+                  .shake(hz: 4, offset: const Offset(3, 0), rotation: 0),
             ],
             const SizedBox(height: AppSpacing.lg),
             FilledButton(

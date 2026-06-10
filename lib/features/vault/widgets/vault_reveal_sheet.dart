@@ -65,6 +65,7 @@ class _VaultRevealSheetState extends ConsumerState<_VaultRevealSheet> {
   }
 
   void _copy(String label, String value) {
+    HapticFeedback.lightImpact();
     Clipboard.setData(ClipboardData(text: value));
     // Clear the clipboard after 30s, but only if it still holds this value.
     Future.delayed(const Duration(seconds: 30), () async {
@@ -73,9 +74,9 @@ class _VaultRevealSheetState extends ConsumerState<_VaultRevealSheet> {
         await Clipboard.setData(const ClipboardData(text: ''));
       }
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$label copied — clears in 30s')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$label copied — clears in 30s')));
   }
 
   Future<void> _edit() async {
@@ -109,9 +110,7 @@ class _VaultRevealSheetState extends ConsumerState<_VaultRevealSheet> {
       ),
     );
     if (confirmed != true) return;
-    await ref
-        .read(vaultControllerProvider.notifier)
-        .deleteItem(widget.item.id);
+    await ref.read(vaultControllerProvider.notifier).deleteItem(widget.item.id);
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -183,8 +182,10 @@ class _VaultRevealSheetState extends ConsumerState<_VaultRevealSheet> {
                         : Icons.visibility_outlined,
                   ),
                   tooltip: _secretVisible ? 'Hide' : 'Reveal',
-                  onPressed: () =>
-                      setState(() => _secretVisible = !_secretVisible),
+                  onPressed: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _secretVisible = !_secretVisible);
+                  },
                 ),
               ),
             if (payload.url != null)
@@ -258,7 +259,15 @@ class _FieldRow extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(value, style: textTheme.bodyLarge),
+                // Cross-fades when the secret toggles between dots and text.
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 180),
+                  child: Text(
+                    value,
+                    key: ValueKey(value),
+                    style: textTheme.bodyLarge,
+                  ),
+                ),
               ],
             ),
           ),
