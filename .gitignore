@@ -1,55 +1,66 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
+# ─── macOS / editors ────────────────────────────────────────────────
 .DS_Store
-.atom/
-.build/
-.buildlog/
+*.swp
 .history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
+.idea/
 *.iml
 *.ipr
 *.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
+# VS Code config is intentionally allowed; uncomment to ignore:
 #.vscode/
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
+# ─── Xcode ──────────────────────────────────────────────────────────
+# Build / derived data
+DerivedData/
+build/
+*.xcuserstate
+*.xcuserdatad/
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
 
-# Symbolication related
-app.*.symbols
+# The Xcode project is GENERATED from project.yml by XcodeGen.
+# Do not commit it — run `xcodegen generate` instead.
+*.xcodeproj/
+*.xcworkspace/
 
-# Obfuscation related
-app.*.map.json
+# ─── Swift Package Manager ──────────────────────────────────────────
+.build/
+.swiftpm/
+Package.resolved
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# ─── CocoaPods / Carthage (only if introduced later) ────────────────
+Pods/
+Carthage/Build/
 
-# fastlane / iOS code signing — never commit secrets
-ios/fastlane/report.xml
-ios/fastlane/Preview.html
-ios/fastlane/test_output/
-ios/fastlane/AuthKey.p8
+# ─── Fastlane / code signing — NEVER commit secrets ─────────────────
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/test_output/
+fastlane/README.md
 **/AuthKey*.p8
 *.p8
 *.p12
 *.mobileprovision
+*.cer
+*.certSigningRequest
+
+# ─── Secrets / local config ─────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.local.xcconfig
+Secrets.xcconfig
+amplify_outputs.json          # generated per-environment; provision via CI
+amplifyconfiguration.json
+
+# ─── Legacy Flutter archive (regenerable build artifacts only) ──────
+legacy/flutter/build/
+legacy/flutter/.dart_tool/
+legacy/flutter/.flutter-plugins-dependencies
+legacy/flutter/ios/Flutter/.last_build_id
