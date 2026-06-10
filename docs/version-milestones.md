@@ -11,7 +11,7 @@ rewrite's foundation is `0.18.0` and minor bumps continue from there. (Build num
 | Version | Phase | Scope | Status |
 |---------|-------|-------|--------|
 | `0.18.0` | 1 — Foundation | XcodeGen scaffold, design system, nav shell, privacy shield, core service seams, crypto core, docs, CI | ✅ done |
-| `0.19.0` | 2 — Auth | Sign in with Apple + Google, Cognito/backend token validation, user provisioning, account deletion, session persistence across restarts | next |
+| `0.19.0` | 2 — Auth | Sign in with Apple + Google, backend token exchange seam (+ dev fallback), session persistence, account deletion | ✅ done |
 | `0.20.0` | 3 — Clients + Projects | Cloud CRUD, search, swipe actions/context menus, clients ↔ projects, premium list UX | |
 | `0.21.0` | 4 — Payments | Per-project invoices/payments, partials, overdue flag, local reminders, dashboard rollups | |
 | `0.22.0` | 5 — Vault | Argon2id (vetted dep), full key hierarchy, ciphertext sync, lazy reveal sheet (blur→clear), biometric unlock, clipboard auto-clear | |
