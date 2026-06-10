@@ -59,18 +59,17 @@
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 
-	<!-- Google Sign-In. Replace both PLACEHOLDER values with the real client id and
-	     its reversed form from the Google Cloud console (see docs/auth.md). AppConfig
-	     treats a PLACEHOLDER GIDClientID as "not configured", so the Google button
-	     errors gracefully until real values are set. -->
-	<key>9238254790-t5ut5h8pmcfpq1hpuontrhns2q9tviel.apps.googleusercontent.com</key>
-	<string>PLACEHOLDER.apps.googleusercontent.com</string>
+	<!-- Google Sign-In. GIDClientID is the OAuth iOS client id from the Google Cloud
+	     console (not a secret — it ships in the app bundle). The URL scheme is the
+	     reversed client id, used to receive the OAuth callback. See docs/auth.md. -->
+	<key>GIDClientID</key>
+	<string>9238254790-t5ut5h8pmcfpq1hpuontrhns2q9tviel.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.googleusercontent.apps.PLACEHOLDER</string>
+				<string>com.googleusercontent.apps.9238254790-t5ut5h8pmcfpq1hpuontrhns2q9tviel</string>
 			</array>
 		</dict>
 	</array>
