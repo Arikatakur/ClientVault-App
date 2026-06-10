@@ -4,6 +4,31 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.13.0] - 2026-06-10
+
+**Plans & subscriptions.** The paywall and entitlement layer for the
+Free / Pro split from the Cloud + Subscriptions plan.
+
+### Added
+- **Plans screen** (Settings → Plan): Free vs Pro comparison with a
+  monthly/annual selector, purchase CTA, and restore-purchases — Pro is
+  cloud sync, multi-device, and unlimited clients/projects; the vault stays
+  zero-knowledge either way.
+- **Entitlement layer**: every feature can ask `ensurePro(...)`, which opens
+  the paywall when needed. The `BillingRepository` interface is shaped for
+  the RevenueCat (StoreKit 2) adapter; until store products exist, everyone
+  is on Free and the CTA explains that subscriptions open at the cloud
+  launch.
+- **Debug-only "simulate Pro" switch** on the plans screen so feature gates
+  can be exercised before the store is live (hidden in release builds).
+- Unit tests for the entitlement controller and pre-store billing behavior.
+
+### Notes
+- Pricing is intentionally not shown ("announced at launch") — it is an open
+  question in the plan. Server-side entitlement validation (RevenueCat
+  webhook → Lambda) arrives with the AWS backend; this gate is UX, not
+  security.
+
 ## [0.12.0] - 2026-06-10
 
 **Accounts.** Sign up and sign in inside the app — the identity layer the

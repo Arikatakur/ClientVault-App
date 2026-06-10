@@ -6,6 +6,7 @@ import '../../core/notifications/notification_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../account/account_controller.dart';
+import '../billing/entitlement_controller.dart';
 import '../github/github_controller.dart';
 import '../notifications/notification_prefs.dart';
 import '../notifications/reminder_scheduler.dart';
@@ -54,6 +55,19 @@ class SettingsScreen extends ConsumerWidget {
               color: AppColors.textTertiary,
             ),
             onTap: () => context.push('/account'),
+          ),
+          ListTile(
+            leading: const Icon(
+              Icons.workspace_premium_outlined,
+              color: AppColors.textSecondary,
+            ),
+            title: const Text('Plan'),
+            subtitle: Text('${ref.watch(entitlementProvider).tier.label} plan'),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: AppColors.textTertiary,
+            ),
+            onTap: () => context.push('/plans'),
           ),
           const _SectionHeader('Notifications'),
           SwitchListTile(
@@ -129,7 +143,7 @@ class SettingsScreen extends ConsumerWidget {
             leading: Icon(Icons.info_outline, color: AppColors.textSecondary),
             title: Text('Version'),
             trailing: Text(
-              '0.12.0',
+              '0.13.0',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
