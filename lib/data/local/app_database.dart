@@ -222,6 +222,58 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> deleteAttachment(String id) =>
       (delete(attachments)..where((a) => a.id.equals(id))).go();
+
+  // --- Backup ------------------------------------------------------------------
+
+  /// One-shot dump of every table for the encrypted backup. Attachment file
+  /// bytes are not part of backups (yet), so attachment rows are excluded too.
+  Future<BackupRows> exportAllRows() async => BackupRows(
+    clients: await select(clients).get(),
+    projects: await select(projects).get(),
+    payments: await select(payments).get(),
+    vaultItems: await select(vaultItems).get(),
+    vaultConfig: await getVaultConfig(),
+  );
+
+  /// Replaces the entire database with [rows] in one transaction (backup
+  /// import). Attachment records are cleared — their files are orphaned by a
+  /// restore and are wiped separately by the backup service.
+  Future<void> replaceAllRows(BackupRows rows) {
+    return transaction(() async {
+      await delete(attachments).go();
+      await delete(payments).go();
+      await delete(vaultItems).go();
+      await delete(projects).go();
+      await delete(clients).go();
+      await delete(vaultConfigs).go();
+      await batch((b) {
+        b.insertAll(clients, rows.clients);
+        b.insertAll(projects, rows.projects);
+        b.insertAll(payments, rows.payments);
+        b.insertAll(vaultItems, rows.vaultItems);
+        if (rows.vaultConfig != null) {
+          b.insert(vaultConfigs, rows.vaultConfig!);
+        }
+      });
+    });
+  }
+}
+
+/// Every row a backup carries, in plain Drift data classes.
+class BackupRows {
+  const BackupRows({
+    required this.clients,
+    required this.projects,
+    required this.payments,
+    required this.vaultItems,
+    this.vaultConfig,
+  });
+
+  final List<Client> clients;
+  final List<Project> projects;
+  final List<Payment> payments;
+  final List<VaultItem> vaultItems;
+  final VaultConfig? vaultConfig;
 }
 
 /// Primary key of the single [VaultConfigs] row.

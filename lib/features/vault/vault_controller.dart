@@ -191,6 +191,14 @@ class VaultController extends Notifier<VaultStatus> {
     }
   }
 
+  /// Drops the key and re-reads the vault config — used after a backup
+  /// import replaces the database underneath us.
+  Future<void> reload() async {
+    _dek = null;
+    state = VaultStatus.loading;
+    await _loadStatus();
+  }
+
   /// Re-wraps the existing data key under a new master password (the items are
   /// not re-encrypted). Returns false if [currentPassword] is wrong. Any
   /// biometric-stored DEK stays valid, since the DEK itself is unchanged.

@@ -6,6 +6,7 @@ import '../../core/notifications/notification_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../account/account_controller.dart';
+import '../backup/backup_flows.dart';
 import '../billing/entitlement_controller.dart';
 import '../github/github_controller.dart';
 import '../notifications/notification_prefs.dart';
@@ -138,17 +139,30 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => context.push('/github'),
           ),
           const _SectionHeader('Data'),
-          const _SoonTile(
-            icon: Icons.backup_outlined,
-            title: 'Export encrypted backup',
+          ListTile(
+            leading: const Icon(
+              Icons.backup_outlined,
+              color: AppColors.textSecondary,
+            ),
+            title: const Text('Export encrypted backup'),
+            subtitle: const Text('Everything except attachment files'),
+            onTap: () => exportBackupFlow(context, ref),
           ),
-          const _SoonTile(icon: Icons.restore_outlined, title: 'Import backup'),
+          ListTile(
+            leading: const Icon(
+              Icons.restore_outlined,
+              color: AppColors.textSecondary,
+            ),
+            title: const Text('Import backup'),
+            subtitle: const Text('Replaces all data on this device'),
+            onTap: () => importBackupFlow(context, ref),
+          ),
           const _SectionHeader('About'),
           const ListTile(
             leading: Icon(Icons.info_outline, color: AppColors.textSecondary),
             title: Text('Version'),
             trailing: Text(
-              '0.14.0',
+              '0.15.0',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),

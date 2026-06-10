@@ -4,6 +4,32 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.15.0] - 2026-06-10
+
+**Encrypted backup.** Take your data with you — the last big MVP gap
+(FR-10 / NFR-5, "no lock-in").
+
+### Added
+- **Export encrypted backup** (Settings → Data): everything — clients,
+  projects, payments, vault items, and the vault's crypto config — sealed
+  into one `.cvbackup` file and saved wherever you choose (Files app, iCloud
+  Drive, …). The file is encrypted with a backup passphrase you set
+  (Argon2id → AES-256-GCM); vault items additionally stay sealed under their
+  original vault key, so secrets are double-encrypted at rest.
+- **Import backup**: replaces everything on the device after an explicit
+  warning, then relocks the vault — it opens with the master password from
+  the backup. Wrong passphrase, damaged files, and backups from newer app
+  versions are each rejected with a clear message.
+- The KDF parameters travel inside the file, so older backups keep working
+  when encryption costs are raised later.
+- Codec and row-mapping unit tests (round trip, wrong passphrase, tamper /
+  garbage / newer-version rejection).
+
+### Notes
+- Attachment **files** are not inside backups yet (only their absence is
+  handled cleanly); that ships with cloud file sync. The settings tile says
+  so.
+
 ## [0.14.0] - 2026-06-10
 
 **Push groundwork + the cloud wire-up guide.** The last scaffolding before
