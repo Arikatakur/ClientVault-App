@@ -58,5 +58,21 @@
 	     exemption. Revisit if non-standard crypto is ever added. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+
+	<!-- Google Sign-In. Replace both PLACEHOLDER values with the real client id and
+	     its reversed form from the Google Cloud console (see docs/auth.md). AppConfig
+	     treats a PLACEHOLDER GIDClientID as "not configured", so the Google button
+	     errors gracefully until real values are set. -->
+	<key>9238254790-t5ut5h8pmcfpq1hpuontrhns2q9tviel.apps.googleusercontent.com</key>
+	<string>PLACEHOLDER.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.PLACEHOLDER</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -20,10 +20,10 @@ options:
 
 settings:
   base:
-    MARKETING_VERSION: "0.18.0"         # ← user-facing app version (semver). Single source of truth.
+    MARKETING_VERSION: "0.19.0"         # ← user-facing app version (semver). Single source of truth.
                                         #    Continues the line past the Flutter app's 0.17.0 — App Store
                                         #    Connect rejects a version that isn't greater than a prior upload.
-    CURRENT_PROJECT_VERSION: "20"       # ← build number; must exceed the highest previously uploaded build
+    CURRENT_PROJECT_VERSION: "21"       # ← build number; must exceed the highest previously uploaded build
                                         #    (the Flutter app reached 0.17.0+19) and increase every upload.
     SWIFT_VERSION: "5.10"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
@@ -35,9 +35,11 @@ settings:
     SWIFT_TREAT_WARNINGS_AS_ERRORS: NO
 
 # Third-party packages are added per phase. The vault phase introduces a vetted
-# Argon2id implementation (e.g. swift-sodium); none are pulled in for the
-# foundation so the scaffold builds with Apple frameworks only.
-packages: {}
+# Argon2id implementation (e.g. swift-sodium).
+packages:
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: "7.1.0"
 
 targets:
   ClientVault:
@@ -58,7 +60,9 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         TARGETED_DEVICE_FAMILY: "1"                       # iPhone-first (premium iPhone app).
         SUPPORTS_MACCATALYST: NO
-    dependencies: []
+    dependencies:
+      - package: GoogleSignIn
+        product: GoogleSignIn
 
   ClientVaultTests:
     type: bundle.unit-test
