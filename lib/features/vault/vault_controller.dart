@@ -28,6 +28,18 @@ final vaultItemsProvider = StreamProvider<List<VaultItem>>((ref) {
   return ref.watch(databaseProvider).watchVaultItems();
 });
 
+/// Vault items linked to one client (titles/types only).
+final vaultItemsForClientProvider =
+    StreamProvider.family<List<VaultItem>, String>((ref, clientId) {
+      return ref.watch(databaseProvider).watchVaultItemsForClient(clientId);
+    });
+
+/// Vault items linked to one project (titles/types only).
+final vaultItemsForProjectProvider =
+    StreamProvider.family<List<VaultItem>, String>((ref, projectId) {
+      return ref.watch(databaseProvider).watchVaultItemsForProject(projectId);
+    });
+
 final vaultControllerProvider = NotifierProvider<VaultController, VaultStatus>(
   VaultController.new,
 );

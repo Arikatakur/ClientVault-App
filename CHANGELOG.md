@@ -4,6 +4,24 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.16.0] - 2026-06-10
+
+**Vault items belong to clients and projects now.** The data model supported
+it since v0.3.0 — the UI finally exposes it (FR-6).
+
+### Added
+- **Link to a client and/or project** from the vault item form (optional
+  dropdowns; links survive edits, and a link to a deleted record degrades
+  gracefully instead of breaking the form).
+- **Vault sections on client and project detail screens** listing the linked
+  items by title. Revealing one still requires the vault to be unlocked —
+  locked taps explain that instead of failing silently.
+- **Link chips in the reveal sheet** showing the connected client/project.
+
+### Notes
+- Only the link ids are stored in plaintext, in keeping with the rule that
+  titles and types are the vault's only unencrypted fields.
+
 ## [0.15.0] - 2026-06-10
 
 **Encrypted backup.** Take your data with you — the last big MVP gap

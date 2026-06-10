@@ -11,6 +11,7 @@ import '../../shared/widgets/status_chip.dart';
 import '../attachments/widgets/attachments_section.dart';
 import '../projects/project_status.dart';
 import '../projects/widgets/project_form_sheet.dart';
+import '../vault/widgets/linked_vault_section.dart';
 import 'widgets/client_form_sheet.dart';
 
 /// Full details for one client: contact info, notes, and their projects.
@@ -154,6 +155,7 @@ class _ClientDetailView extends ConsumerWidget {
             },
           ),
           AttachmentsSection(clientId: client.id),
+          LinkedVaultSection(clientId: client.id),
         ],
       ),
     );

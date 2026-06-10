@@ -15,6 +15,7 @@ import '../github/repo_browser_screen.dart';
 import '../github/widgets/repo_picker_sheet.dart';
 import '../payments/payment_status.dart';
 import '../payments/widgets/payment_form_sheet.dart';
+import '../vault/widgets/linked_vault_section.dart';
 import 'project_status.dart';
 import 'widgets/project_form_sheet.dart';
 
@@ -165,6 +166,7 @@ class _ProjectDetailView extends ConsumerWidget {
           ],
           _GitHubSection(project: project),
           AttachmentsSection(projectId: project.id),
+          LinkedVaultSection(projectId: project.id),
         ],
       ),
     );

@@ -153,6 +153,22 @@ class AppDatabase extends _$AppDatabase {
     )..orderBy([(v) => OrderingTerm(expression: v.title)])).watch();
   }
 
+  /// Watches the vault items linked to one client (titles only).
+  Stream<List<VaultItem>> watchVaultItemsForClient(String clientId) {
+    return (select(vaultItems)
+          ..where((v) => v.clientId.equals(clientId))
+          ..orderBy([(v) => OrderingTerm(expression: v.title)]))
+        .watch();
+  }
+
+  /// Watches the vault items linked to one project (titles only).
+  Stream<List<VaultItem>> watchVaultItemsForProject(String projectId) {
+    return (select(vaultItems)
+          ..where((v) => v.projectId.equals(projectId))
+          ..orderBy([(v) => OrderingTerm(expression: v.title)]))
+        .watch();
+  }
+
   Future<int> insertVaultItem(VaultItemsCompanion entry) =>
       into(vaultItems).insert(entry);
 

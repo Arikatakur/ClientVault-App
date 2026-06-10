@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../data/local/app_database.dart';
+import '../../../data/providers/database_provider.dart';
 import '../vault_controller.dart';
 import '../vault_item_type.dart';
 import '../vault_payload.dart';
@@ -119,6 +120,14 @@ class _VaultRevealSheetState extends ConsumerState<_VaultRevealSheet> {
     final textTheme = Theme.of(context).textTheme;
     final type = VaultItemType.fromValue(widget.item.type);
     final payload = _payload;
+    final clientId = widget.item.clientId;
+    final projectId = widget.item.projectId;
+    final linkedClient = clientId == null
+        ? null
+        : ref.watch(clientByIdProvider(clientId)).value;
+    final linkedProject = projectId == null
+        ? null
+        : ref.watch(projectByIdProvider(projectId)).value;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
@@ -149,6 +158,38 @@ class _VaultRevealSheetState extends ConsumerState<_VaultRevealSheet> {
               ),
             ],
           ),
+          if (linkedClient != null || linkedProject != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.sm,
+              children: [
+                if (linkedClient != null)
+                  Chip(
+                    avatar: const Icon(
+                      Icons.person_outline,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    label: Text(linkedClient.name),
+                    labelStyle: textTheme.bodySmall,
+                    backgroundColor: AppColors.surfaceElevated,
+                    side: const BorderSide(color: AppColors.outline),
+                  ),
+                if (linkedProject != null)
+                  Chip(
+                    avatar: const Icon(
+                      Icons.folder_outlined,
+                      size: 16,
+                      color: AppColors.textSecondary,
+                    ),
+                    label: Text(linkedProject.name),
+                    labelStyle: textTheme.bodySmall,
+                    backgroundColor: AppColors.surfaceElevated,
+                    side: const BorderSide(color: AppColors.outline),
+                  ),
+              ],
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           if (_loading)
             const Padding(

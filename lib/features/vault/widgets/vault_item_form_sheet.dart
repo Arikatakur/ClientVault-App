@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../data/local/app_database.dart';
+import '../../../data/providers/database_provider.dart';
 import '../vault_controller.dart';
 import '../vault_item_type.dart';
 import '../vault_payload.dart';
@@ -41,6 +42,8 @@ class _VaultItemFormState extends ConsumerState<_VaultItemForm> {
   late final TextEditingController _notes;
 
   late VaultItemType _type;
+  String? _clientId;
+  String? _projectId;
   bool _obscure = true;
   bool _busy = false;
   String? _error;
@@ -53,6 +56,8 @@ class _VaultItemFormState extends ConsumerState<_VaultItemForm> {
     _type = item != null
         ? VaultItemType.fromValue(item.type)
         : VaultItemType.password;
+    _clientId = item?.clientId;
+    _projectId = item?.projectId;
     _title = TextEditingController(text: item?.title ?? '');
     _username = TextEditingController(text: payload?.username ?? '');
     _secret = TextEditingController(text: payload?.secret ?? '');
@@ -95,13 +100,21 @@ class _VaultItemFormState extends ConsumerState<_VaultItemForm> {
     try {
       final item = widget.item;
       if (item == null) {
-        await notifier.addItem(type: _type, title: title, payload: payload);
+        await notifier.addItem(
+          type: _type,
+          title: title,
+          payload: payload,
+          clientId: _clientId,
+          projectId: _projectId,
+        );
       } else {
         await notifier.updateItem(
           id: item.id,
           type: _type,
           title: title,
           payload: payload,
+          clientId: _clientId,
+          projectId: _projectId,
         );
       }
       if (mounted) Navigator.of(context).pop();
@@ -201,6 +214,24 @@ class _VaultItemFormState extends ConsumerState<_VaultItemForm> {
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(labelText: 'Notes (optional)'),
             ),
+            const SizedBox(height: AppSpacing.md),
+            _LinkDropdown<Client>(
+              label: 'Client (optional)',
+              valueId: _clientId,
+              itemsAsync: ref.watch(clientsStreamProvider),
+              idOf: (c) => c.id,
+              nameOf: (c) => c.name,
+              onChanged: (id) => setState(() => _clientId = id),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            _LinkDropdown<Project>(
+              label: 'Project (optional)',
+              valueId: _projectId,
+              itemsAsync: ref.watch(projectsStreamProvider),
+              idOf: (p) => p.id,
+              nameOf: (p) => p.name,
+              onChanged: (id) => setState(() => _projectId = id),
+            ),
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.md),
               Text(_error!, style: const TextStyle(color: AppColors.danger)),
@@ -219,6 +250,54 @@ class _VaultItemFormState extends ConsumerState<_VaultItemForm> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Nullable dropdown linking the item to a client or project. Only the link
+/// (an id) is stored — titles stay the only plaintext on vault items.
+class _LinkDropdown<T> extends StatelessWidget {
+  const _LinkDropdown({
+    required this.label,
+    required this.valueId,
+    required this.itemsAsync,
+    required this.idOf,
+    required this.nameOf,
+    required this.onChanged,
+  });
+
+  final String label;
+  final String? valueId;
+  final AsyncValue<List<T>> itemsAsync;
+  final String Function(T) idOf;
+  final String Function(T) nameOf;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = itemsAsync.value ?? const [];
+    // The stored link may point at a deleted row; show it as "(unavailable)"
+    // rather than crashing the dropdown's value lookup.
+    final ids = items.map(idOf).toSet();
+    final orphaned = valueId != null && !ids.contains(valueId);
+
+    return DropdownButtonFormField<String?>(
+      initialValue: valueId,
+      decoration: InputDecoration(labelText: label),
+      items: [
+        const DropdownMenuItem<String?>(child: Text('None')),
+        if (orphaned)
+          DropdownMenuItem<String?>(
+            value: valueId,
+            child: const Text('(unavailable)'),
+          ),
+        for (final item in items)
+          DropdownMenuItem<String?>(
+            value: idOf(item),
+            child: Text(nameOf(item), overflow: TextOverflow.ellipsis),
+          ),
+      ],
+      onChanged: onChanged,
     );
   }
 }
