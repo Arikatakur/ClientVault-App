@@ -9,14 +9,43 @@ import '../../data/providers/database_provider.dart';
 import '../../shared/widgets/empty_state.dart';
 import 'widgets/client_form_sheet.dart';
 
-/// Clients list, wired to the on-device database. Tap a row to open the
-/// client's detail screen; use the FAB to add one.
-class ClientsScreen extends ConsumerWidget {
+/// Clients list, wired to the on-device database. Searchable by name or
+/// company; tap a row to open the client's detail screen, FAB to add one.
+class ClientsScreen extends ConsumerStatefulWidget {
   const ClientsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ClientsScreen> createState() => _ClientsScreenState();
+}
+
+class _ClientsScreenState extends ConsumerState<ClientsScreen> {
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(
+      () => setState(() => _query = _search.text.trim().toLowerCase()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  bool _matches(Client client) {
+    if (_query.isEmpty) return true;
+    return client.name.toLowerCase().contains(_query) ||
+        (client.company?.toLowerCase().contains(_query) ?? false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final clientsAsync = ref.watch(clientsStreamProvider);
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Clients')),
@@ -44,12 +73,45 @@ class ClientsScreen extends ConsumerWidget {
                   'payments, and credentials around them.',
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-            itemCount: clients.length,
-            separatorBuilder: (_, _) => const Divider(indent: 72),
-            itemBuilder: (context, index) =>
-                _ClientTile(client: clients[index]),
+          final filtered = clients.where(_matches).toList();
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                child: TextField(
+                  controller: _search,
+                  decoration: const InputDecoration(
+                    hintText: 'Search by name or company',
+                    prefixIcon: Icon(Icons.search),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              if (filtered.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'No clients match "$_query".',
+                      style: textTheme.bodyMedium,
+                    ),
+                  ),
+                )
+              else
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, _) => const Divider(indent: 72),
+                    itemBuilder: (context, index) =>
+                        _ClientTile(client: filtered[index]),
+                  ),
+                ),
+            ],
           );
         },
       ),

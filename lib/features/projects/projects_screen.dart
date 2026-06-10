@@ -12,19 +12,49 @@ import '../../shared/widgets/status_chip.dart';
 import 'project_status.dart';
 import 'widgets/project_form_sheet.dart';
 
-/// Projects list across all clients. Tap a row for detail; the FAB creates a
-/// project (and nudges the user to add a client first if none exist).
-class ProjectsScreen extends ConsumerWidget {
+/// Projects list across all clients. Searchable by project or client name;
+/// tap a row for detail, FAB to create one.
+class ProjectsScreen extends ConsumerStatefulWidget {
   const ProjectsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProjectsScreen> createState() => _ProjectsScreenState();
+}
+
+class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _search.addListener(
+      () => setState(() => _query = _search.text.trim().toLowerCase()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final projectsAsync = ref.watch(projectsStreamProvider);
     final clientsAsync = ref.watch(clientsStreamProvider);
     final clientsById = {
       for (final client in clientsAsync.value ?? const <Client>[])
         client.id: client,
     };
+    final textTheme = Theme.of(context).textTheme;
+
+    bool matches(Project project) {
+      if (_query.isEmpty) return true;
+      return project.name.toLowerCase().contains(_query) ||
+          (clientsById[project.clientId]?.name.toLowerCase().contains(_query) ??
+              false);
+    }
 
     return Scaffold(
       appBar: AppBar(title: const Text('Projects')),
@@ -52,17 +82,50 @@ class ProjectsScreen extends ConsumerWidget {
                   'linked GitHub repos for a client.',
             );
           }
-          return ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-            itemCount: projects.length,
-            separatorBuilder: (_, _) => const Divider(indent: 72),
-            itemBuilder: (context, index) {
-              final project = projects[index];
-              return _ProjectTile(
-                project: project,
-                clientName: clientsById[project.clientId]?.name,
-              );
-            },
+          final filtered = projects.where(matches).toList();
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                  AppSpacing.md,
+                  AppSpacing.sm,
+                ),
+                child: TextField(
+                  controller: _search,
+                  decoration: const InputDecoration(
+                    hintText: 'Search by project or client',
+                    prefixIcon: Icon(Icons.search),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              if (filtered.isEmpty)
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      'No projects match "$_query".',
+                      style: textTheme.bodyMedium,
+                    ),
+                  ),
+                )
+              else
+                Expanded(
+                  child: ListView.separated(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xxl),
+                    itemCount: filtered.length,
+                    separatorBuilder: (_, _) => const Divider(indent: 72),
+                    itemBuilder: (context, index) {
+                      final project = filtered[index];
+                      return _ProjectTile(
+                        project: project,
+                        clientName: clientsById[project.clientId]?.name,
+                      );
+                    },
+                  ),
+                ),
+            ],
           );
         },
       ),

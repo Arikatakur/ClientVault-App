@@ -4,6 +4,16 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.17.0] - 2026-06-10
+
+**List search.** The last piece of FR-9.
+
+### Added
+- **Clients tab search** — filter by client name or company.
+- **Projects tab search** — filter by project name *or its client's name*.
+- Both match the vault's existing search pattern, with a friendly
+  "no matches" state.
+
 ## [0.16.0] - 2026-06-10
 
 **Vault items belong to clients and projects now.** The data model supported
