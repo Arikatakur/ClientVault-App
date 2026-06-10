@@ -4,19 +4,27 @@ import SwiftUI
 /// Vault/Security phase wires them to the keychain policy; Account and Plan read
 /// real session/entitlement state, and Sign out works.
 struct SettingsView: View {
+    @Environment(AppEnvironment.self) private var env
     @Environment(SessionStore.self) private var session
     @Environment(EntitlementStore.self) private var entitlements
 
     @State private var biometricUnlock = true
     @State private var autoLock: AutoLockInterval = .twoMinutes
+    @State private var showDeleteConfirm = false
 
     var body: some View {
         List {
             Section("Account") {
+                if let email = session.user?.email {
+                    LabeledContent("Email", value: email)
+                }
                 LabeledContent("Status", value: session.phase == .authenticated ? "Signed in" : "Signed out")
                 Button("Sign out", role: .destructive) {
                     Haptics.shared.warning()
-                    session.signOut()
+                    env.auth.signOut()
+                }
+                Button("Delete account", role: .destructive) {
+                    showDeleteConfirm = true
                 }
             }
 
@@ -47,6 +55,22 @@ struct SettingsView: View {
         .background(Palette.background)
         .navigationTitle("Settings")
         .toolbarBackground(Palette.background, for: .navigationBar)
+        .confirmationDialog(
+            "Delete your account? This permanently removes your data and can't be undone.",
+            isPresented: $showDeleteConfirm,
+            titleVisibility: .visible
+        ) {
+            Button("Delete account", role: .destructive) { deleteAccount() }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    private func deleteAccount() {
+        Task {
+            Haptics.shared.warning()
+            // On success this signs out, and RootView routes back to sign-in.
+            try? await env.auth.deleteAccount()
+        }
     }
 
     private static var versionString: String {

@@ -22,20 +22,31 @@ final class SessionStore {
 
     private(set) var phase: Phase
     private(set) var vault: VaultState = .locked
+    private(set) var user: UserProfile?
 
     private let tokenStore: TokenStoring
 
-    init(tokenStore: TokenStoring, phase: Phase = .authenticated) {
+    /// The scaffold defaulted to `.authenticated`; with auth wired the app starts
+    /// `.unauthenticated` and `restore()` promotes it if a session exists.
+    init(tokenStore: TokenStoring, phase: Phase = .unauthenticated) {
         self.tokenStore = tokenStore
         self.phase = phase
     }
 
-    func signedIn() {
+    /// Sign-in completed with a known user.
+    func completeSignIn(user: UserProfile?) {
+        self.user = user
+        phase = .authenticated
+    }
+
+    /// Restored an existing session where we don't (yet) have profile details.
+    func markAuthenticated() {
         phase = .authenticated
     }
 
     func signOut() {
         tokenStore.clear()
+        user = nil
         vault = .locked
         phase = .unauthenticated
     }

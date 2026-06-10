@@ -2,7 +2,7 @@ import Foundation
 
 /// Structured API errors mapped to user-friendly messaging. Acceptance criteria
 /// call out offline, rate-limited, and session-expired states explicitly.
-enum APIError: Error, Equatable {
+enum APIError: Error, Equatable, Sendable {
     case offline
     case timedOut
     case unauthorized

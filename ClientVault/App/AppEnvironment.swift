@@ -11,6 +11,7 @@ import Observation
 final class AppEnvironment {
     let config: AppConfig
     let session: SessionStore
+    let auth: AuthServicing
     let entitlements: EntitlementStore
     let haptics: HapticsServicing
     let keychain: KeychainStoring
@@ -22,6 +23,7 @@ final class AppEnvironment {
     init(
         config: AppConfig,
         session: SessionStore,
+        auth: AuthServicing,
         entitlements: EntitlementStore,
         haptics: HapticsServicing,
         keychain: KeychainStoring,
@@ -32,6 +34,7 @@ final class AppEnvironment {
     ) {
         self.config = config
         self.session = session
+        self.auth = auth
         self.entitlements = entitlements
         self.haptics = haptics
         self.keychain = keychain
@@ -48,10 +51,12 @@ final class AppEnvironment {
         let tokenStore = TokenStore(keychain: keychain)
         let api = URLSessionAPIClient(baseURL: config.apiBaseURL, tokenProvider: tokenStore)
         let session = SessionStore(tokenStore: tokenStore)
+        let auth = LiveAuthService(api: api, tokenStore: tokenStore, session: session, config: config)
 
         return AppEnvironment(
             config: config,
             session: session,
+            auth: auth,
             entitlements: EntitlementStore(),
             haptics: Haptics.shared,
             keychain: keychain,
