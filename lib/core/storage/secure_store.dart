@@ -11,6 +11,8 @@ class SecureStore {
 
   static const String _dekKey = 'vault_dek_b64';
   static const String _dekHwBoundKey = 'vault_dek_hw_bound';
+  static const String _accountRecordKey = 'account_record';
+  static const String _accountSessionKey = 'account_session';
   static const String _githubTokenKey = 'github_token';
   static const String _lockTimeoutKey = 'lock_timeout_seconds';
   static const String _notifEnabledKey = 'notif_enabled';
@@ -68,6 +70,26 @@ class SecureStore {
   /// those are upgraded by the vault controller on the next unlock.
   Future<bool> isDekHardwareBound() =>
       _storage.containsKey(key: _dekHwBoundKey);
+
+  // --- Account (local mode) ---------------------------------------------------
+  // The on-device account record (credential hash) and the active session.
+  // Both move to Cognito when the cloud backend is provisioned.
+
+  Future<String?> readAccountRecord() => _storage.read(key: _accountRecordKey);
+
+  Future<void> writeAccountRecord(String json) =>
+      _storage.write(key: _accountRecordKey, value: json);
+
+  Future<void> deleteAccountRecord() => _storage.delete(key: _accountRecordKey);
+
+  Future<String?> readAccountSession() =>
+      _storage.read(key: _accountSessionKey);
+
+  Future<void> writeAccountSession(String json) =>
+      _storage.write(key: _accountSessionKey, value: json);
+
+  Future<void> deleteAccountSession() =>
+      _storage.delete(key: _accountSessionKey);
 
   // --- GitHub token ----------------------------------------------------------
 

@@ -4,6 +4,34 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.12.0] - 2026-06-10
+
+**Accounts.** Sign up and sign in inside the app — the identity layer the
+cloud sync and subscription releases will build on (per the Cloud +
+Subscriptions plan: account login stays separate from the vault master
+password).
+
+### Added
+- **Create account / sign in** (Settings → Account): email + password with a
+  name field, show/hide password, validation, and clear error messages.
+- **Profile screen** with avatar, provider badge, member-since date,
+  **sign out**, and **delete account** (the Apple-required in-app deletion;
+  app data is untouched).
+- **Sign in with Apple / Google buttons** — visible now, activated when the
+  Cognito backend goes live; until then they explain that accounts are
+  on-device.
+- `AuthRepository` interface with an on-device implementation: credentials
+  are never stored — only an **Argon2id hash** in the keychain (independent
+  salt and parameters from the vault's). One account per device in local
+  mode; sessions survive restarts.
+- Unit tests for the full account lifecycle (sign-up, wrong-password
+  rejection, re-sign-in, single-account rule, deletion).
+
+### Notes
+- Accounts are **local-mode** until the AWS (Cognito) backend is provisioned;
+  the UI says so explicitly. Swapping in Cognito is a provider rebind
+  (`authRepositoryProvider`), not a refactor.
+
 ## [0.11.0] - 2026-06-10
 
 **Security hardening + design polish.** Closes the two remaining MVP security

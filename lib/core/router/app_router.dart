@@ -1,5 +1,6 @@
 import 'package:go_router/go_router.dart';
 
+import '../../features/account/account_screen.dart';
 import '../../features/clients/client_detail_screen.dart';
 import '../../features/clients/clients_screen.dart';
 import '../../features/dashboard/dashboard_screen.dart';
@@ -76,6 +77,10 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/github',
       builder: (context, state) => const GitHubConnectScreen(),
+    ),
+    GoRoute(
+      path: '/account',
+      builder: (context, state) => const AccountScreen(),
     ),
   ],
 );

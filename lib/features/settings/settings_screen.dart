@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../core/notifications/notification_service.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
+import '../account/account_controller.dart';
 import '../github/github_controller.dart';
 import '../notifications/notification_prefs.dart';
 import '../notifications/reminder_scheduler.dart';
@@ -26,10 +27,34 @@ class SettingsScreen extends ConsumerWidget {
     final lockTimeout = ref.watch(lockTimeoutProvider);
     final notifPrefs = ref.watch(notificationPrefsProvider);
 
+    final account = ref.watch(accountControllerProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
+          const _SectionHeader('Account'),
+          ListTile(
+            leading: const Icon(
+              Icons.account_circle_outlined,
+              color: AppColors.textSecondary,
+            ),
+            title: Text(
+              account.isSignedIn
+                  ? (account.user!.displayName ?? account.user!.email)
+                  : 'Create account or sign in',
+            ),
+            subtitle: Text(
+              account.isSignedIn
+                  ? account.user!.email
+                  : 'Your identity for cloud sync and subscriptions',
+            ),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: AppColors.textTertiary,
+            ),
+            onTap: () => context.push('/account'),
+          ),
           const _SectionHeader('Notifications'),
           SwitchListTile(
             secondary: const Icon(
@@ -104,7 +129,7 @@ class SettingsScreen extends ConsumerWidget {
             leading: Icon(Icons.info_outline, color: AppColors.textSecondary),
             title: Text('Version'),
             trailing: Text(
-              '0.11.0',
+              '0.12.0',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
