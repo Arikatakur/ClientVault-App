@@ -1,93 +1,106 @@
 # ClientVault
 
-> Personal command center for freelance/dev work — **clients, projects, payments, and an
-> encrypted credential vault** — with GitHub integration, a dark "secure fintech" UI, and a
-> Windows → iPhone shipping pipeline via GitHub Actions.
+> A native iPhone command center for freelance/dev work — **clients, projects,
+> payments, and a zero-knowledge encrypted vault** — built with **SwiftUI** on a
+> **cloud backend**, with an Apple-quality dark UI.
 
-**Status:** `v0.1.0` — Phase 0 (Project Foundation). Local-first, single-user, offline.
+**Status:** `v0.18.0` — Phase 1 (Foundation): design system · navigation shell ·
+privacy shield · core service seams. Cloud features land phase by phase.
+
+> **This is a rewrite.** ClientVault began as a local-first Flutter app (through
+> `v0.17.0`). It has been rebuilt as a native SwiftUI + cloud app following
+> [`docs/rewrite-blueprint.md`](docs/rewrite-blueprint.md). The Flutter codebase
+> is archived under [`legacy/flutter/`](legacy/flutter/). The native app
+> **continues the version line at `0.18.0`** (not `0.1.0`) so TestFlight/App Store
+> build and version numbers keep climbing past the shipped `0.17.0`.
 
 ---
 
 ## Highlights
-- 🔐 Local-first **encrypted vault** (AES-256-GCM + Argon2id) — *security model designed; crypto lands in a later phase.*
-- 🧭 Five-tab app: **Dashboard · Projects · Clients · Vault · Settings**
-- 💾 On-device **SQLite** via Drift; reactive UI via **Riverpod**
-- 🎨 **Material 3** dark-first design system
-- 📱 **iOS + Android** from one codebase
+- 🔐 **Zero-knowledge vault** — vault secrets are AES-256-GCM encrypted *on device*; the server only ever stores ciphertext.
+- 🧭 Five-tab native app: **Dashboard · Projects · Clients · Vault · Settings**.
+- ☁️ **Cloud-first**, multi-device, account-based (Sign in with Apple / Google).
+- 🛡️ **Privacy shield** covers the UI the instant the app backgrounds (no sensitive app-switcher snapshots).
+- 🎨 Dark "secure fintech" design system: tokens for color, type, spacing, motion, and haptics.
 
 ## Tech stack
 | Layer | Choice |
 |------|--------|
-| Framework | Flutter (Dart) |
-| Navigation | go_router |
-| State | Riverpod |
-| Database | Drift (SQLite) + drift_flutter |
-| Secure storage | flutter_secure_storage (Keychain / Keystore) |
-| Biometrics | local_auth |
-| Crypto | cryptography (AES-GCM, Argon2id) |
-| GitHub | flutter_appauth (OAuth + PKCE) + dio |
-| Charts / motion | fl_chart · flutter_animate · lottie |
+| UI | SwiftUI + Swift Concurrency |
+| State | Observation (`@Observable`) injected via the environment |
+| Navigation | `TabView` + `NavigationStack` (one per tab) |
+| Crypto | CryptoKit AES-256-GCM · Argon2id (vetted dep, vault phase) |
+| Secure storage | Keychain (`ThisDeviceOnly`) |
+| Networking | `URLSession` + `Codable`, structured `APIError` |
+| Backend | AWS Amplify Gen 2 (Cognito · AppSync/API GW · DynamoDB · S3 · SNS) |
+| Project gen | XcodeGen (`project.yml`) |
+| CI | GitHub Actions (macOS) · Fastlane / TestFlight |
 
 ## Getting started
 
-### Prerequisites
-- **Flutter SDK** (stable; developed on 3.44.1 / Dart 3.12.1). Verify with `flutter doctor`.
-- **Android runs:** Android Studio (SDK + emulator).
-- **iOS builds:** run in CI — no Mac required locally (see below).
+This repo is **authored on Windows**; the iOS app builds on **macOS / CI** (Xcode
+can't run on Windows). The Xcode project is generated from `project.yml`.
 
-### Run
+### On a Mac
 ```bash
-flutter pub get
-dart run build_runner build      # generate Drift code (*.g.dart)
-flutter run                      # Android emulator, or `flutter run -d edge` for a web preview
+brew install xcodegen
+xcodegen generate          # creates ClientVault.xcodeproj
+open ClientVault.xcodeproj # ⌘R to run, ⌘U to test
 ```
 
-> The on-device database is native (iOS / Android / desktop). The **web preview** renders the
-> full UI; the Clients tab shows an "on-device" notice instead of live data.
-
-### Verify
+### Build & test from the command line
 ```bash
-flutter analyze
-flutter test
+xcodebuild -project ClientVault.xcodeproj -scheme ClientVault \
+  -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+  CODE_SIGNING_ALLOWED=NO clean test
 ```
+
+CI runs exactly this on every push — see `.github/workflows/ios-ci.yml`.
 
 ## Project structure
 ```
-lib/
-  app/                 # root MaterialApp.router
-  core/
-    router/            # go_router config (5-tab StatefulShellRoute)
-    theme/             # design tokens + Material 3 dark theme
-    utils/             # id generation, etc.
-  data/
-    local/             # Drift tables + AppDatabase (+ generated *.g.dart)
-    providers/         # Riverpod providers (database, clients stream)
-  features/
-    dashboard/ projects/ clients/ vault/ settings/   # one folder per tab
-    shell/             # bottom-nav scaffold
-  shared/widgets/      # reusable UI (empty states, ...)
+project.yml                # XcodeGen spec (the Xcode project is generated, not committed)
+ClientVault/
+  App/                     # entry, root router, tab shell, DI container, session
+  Core/
+    Config/ Networking/ Crypto/ Storage/ DesignSystem/
+  Features/                # Auth · Dashboard · Clients · Projects · Payments · Vault · Settings
+  SharedUI/                # reusable components, animations, privacy shield
+  Services/                # Push · local Notifications · Entitlements
+  APIModels/               # Codable DTOs
+  Domain/                  # entities + DTO↔domain mapping
+  Resources/               # Info.plist, entitlements, Assets.xcassets
+ClientVaultTests/          # crypto, mapping, design-token tests
+docs/                      # blueprint, architecture, security model, backend, milestones
+legacy/flutter/            # archived Flutter app (not built)
 ```
 
+## Security model (short version)
+Vault secrets are encrypted on-device before upload. A password-derived **Master
+Key** (Argon2id) unwraps a random per-user **Data Encryption Key**; that DEK
+AES-GCM-encrypts each item. The server stores only the wrapped DEK, KDF params,
+and ciphertext. Full details and threat model: [`docs/security-model.md`](docs/security-model.md).
+
 ## Building for iPhone (Windows → iOS)
-iOS is built and signed on **GitHub Actions macOS runners** and shipped to **TestFlight** — no
-Mac needed locally. A tag-triggered (`v*`) release workflow is planned for Phase 0.5. Android
-can be built locally on Windows (`flutter build appbundle`) or in CI.
+iOS is built and signed on **GitHub Actions macOS runners** and shipped to
+**TestFlight** — no Mac needed locally. A tag-triggered (`v*`) release workflow
+is planned for the TestFlight phase.
 
 ## Versioning & workflow
-Semantic versioning (`x.y.z`) tracked in `pubspec.yaml` (`version: x.y.z+build`). Every
-versioned change updates `CHANGELOG.md` and uses **Conventional Commits** (`feat:`, `fix:`,
-`chore:`, …). See `CLAUDE.md` for the full workflow and `clientvault-plan-flutter.md` for the
-product plan and RTD.
+Semantic versioning (`x.y.z`) lives in `project.yml` (`MARKETING_VERSION` +
+`CURRENT_PROJECT_VERSION`). Every versioned change updates `CHANGELOG.md` and uses
+**Conventional Commits**. See [`CLAUDE.md`](CLAUDE.md) for the full workflow.
 
 ## Roadmap
 | Version | Phase | Scope |
 |---------|-------|-------|
-| `0.1.0` | Foundation | scaffold · theme · nav · DB ✅ |
-| `0.2.0` | Core CRUD | clients + projects + live dashboard |
-| `0.3.0` | Vault | master password · biometrics · encrypted items |
-| `0.4.0` | Payments | records · roll-ups · overdue flags |
-| `0.5.0` | GitHub | OAuth · repo browser · link to project |
-| `0.6.0`+ | Polish | animations · backup · TestFlight → `1.0.0` MVP |
+| `0.18.0` | Foundation | design system · nav shell · privacy shield · seams ✅ |
+| `0.19.0` | Auth | Sign in with Apple/Google + backend validation |
+| `0.20.0` | Clients + Projects | cloud CRUD · search · premium list UX |
+| `0.21.0` | Payments | invoices · partials · overdue · reminders |
+| `0.22.0` | Vault | Argon2id · key hierarchy · ciphertext sync · reveal · biometrics |
+| `0.23.0` | Settings + Plan | entitlements (server-validation seam) |
+| `0.24.0`+ | Push → TestFlight | APNs · cross-device · signing → `1.0.0` MVP |
 
 ## License
 Private project — all rights reserved.
