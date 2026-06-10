@@ -4,6 +4,35 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.11.0] - 2026-06-10
+
+**Security hardening + design polish.** Closes the two remaining MVP security
+gaps (iOS-only scope — Android wiring is deferred).
+
+### Security
+- **Privacy shield** — the UI is covered with a branded lock screen the instant
+  the app stops being active, so vault items and client data never appear in
+  the iOS app switcher snapshot or behind system sheets.
+- **Hardware-bound biometric unlock** — the vault data key is now stored under
+  the keychain's own biometric policy (`biometryCurrentSet`, device-bound):
+  the OS enforces Face ID at the keychain layer instead of an app-layer check,
+  and re-enrolling biometrics invalidates the entry. Existing stashes are
+  upgraded automatically on the next unlock.
+
+### Changed
+- **Design polish:** dashboard stat cards count up and the page eases in with
+  a staggered entrance; secrets cross-fade between hidden and revealed; the
+  lock screen animates in and shakes on a wrong password; empty states fade
+  in; the tab bar gained a hairline divider.
+- **Haptics** on copy, secret reveal, lock, and unlock (success and failure).
+- Clearer message when biometric unlock fails ("use your master password").
+
+### Documentation
+- `clientvault-plan-flutter.md` now carries an MVP status section: what
+  shipped through v0.11.0, what remains (encrypted backup/export, vault-item
+  linking UI, tags, list search, Android parity, KDF/throttling hardening),
+  and the iOS-only scope decision.
+
 ## [0.10.0] - 2026-06-06
 
 **Reminders.** Get notified before payments and project deadlines — even when the app is closed.

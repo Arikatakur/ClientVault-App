@@ -49,7 +49,9 @@ class SettingsScreen extends ConsumerWidget {
             ),
             title: const Text('Remind me'),
             subtitle: Text(_leadLabel(notifPrefs.leadDays)),
-            onTap: notifPrefs.enabled ? () => _pickLeadDays(context, ref) : null,
+            onTap: notifPrefs.enabled
+                ? () => _pickLeadDays(context, ref)
+                : null,
           ),
           ListTile(
             enabled: notifPrefs.enabled,
@@ -64,7 +66,10 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const _SectionHeader('Security'),
           ListTile(
-            leading: const Icon(Icons.timer_outlined, color: AppColors.textSecondary),
+            leading: const Icon(
+              Icons.timer_outlined,
+              color: AppColors.textSecondary,
+            ),
             title: const Text('Auto-lock'),
             subtitle: Text(_timeoutLabel(lockTimeout)),
             onTap: () => _pickTimeout(context, ref),
@@ -99,7 +104,7 @@ class SettingsScreen extends ConsumerWidget {
             leading: Icon(Icons.info_outline, color: AppColors.textSecondary),
             title: Text('Version'),
             trailing: Text(
-              '0.10.0',
+              '0.11.0',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -193,7 +198,9 @@ Future<void> _sendTestNotification(BuildContext context, WidgetRef ref) async {
   if (!granted) {
     messenger.showSnackBar(
       const SnackBar(
-        content: Text('Enable notifications for ClientVault in system settings.'),
+        content: Text(
+          'Enable notifications for ClientVault in system settings.',
+        ),
       ),
     );
     return;
@@ -216,9 +223,9 @@ void _changePassword(BuildContext context, VaultStatus status) {
     case VaultStatus.unlocked:
       showChangeMasterPasswordSheet(context);
     case VaultStatus.uninitialized:
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Set up your vault first.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Set up your vault first.')));
     case VaultStatus.loading:
     case VaultStatus.unavailable:
       ScaffoldMessenger.of(context).showSnackBar(
