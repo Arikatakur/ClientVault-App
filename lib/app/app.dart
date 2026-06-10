@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/router/app_router.dart';
+import '../core/security/privacy_shield.dart';
 import '../core/theme/app_theme.dart';
 import '../features/notifications/notifications_bootstrap.dart';
 import '../features/vault/auto_lock_scope.dart';
@@ -21,9 +22,11 @@ class ClientVaultApp extends StatelessWidget {
       darkTheme: AppTheme.dark,
       themeMode: ThemeMode.dark,
       routerConfig: appRouter,
-      builder: (context, child) => AutoLockScope(
-        child: NotificationsBootstrap(
-          child: child ?? const SizedBox.shrink(),
+      builder: (context, child) => PrivacyShield(
+        child: AutoLockScope(
+          child: NotificationsBootstrap(
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
     );
