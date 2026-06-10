@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cryptography/cryptography.dart';
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -80,9 +82,7 @@ class VaultController extends Notifier<VaultStatus> {
   Future<void> _loadStatus() async {
     try {
       final config = await _db.getVaultConfig();
-      state = config == null
-          ? VaultStatus.uninitialized
-          : VaultStatus.locked;
+      state = config == null ? VaultStatus.uninitialized : VaultStatus.locked;
     } catch (_) {
       // No on-device database (e.g. web preview): show the unavailable state.
       state = VaultStatus.unavailable;
@@ -146,21 +146,41 @@ class VaultController extends Notifier<VaultStatus> {
       );
       _dek = SecretKey(dekBytes);
       state = VaultStatus.unlocked;
+      await _upgradeBiometricStash();
       return true;
     } on SecretBoxAuthenticationError {
       return false; // GCM auth failed => wrong password
     }
   }
 
-  /// Unlocks via biometrics using the DEK stashed in secure storage.
+  /// Unlocks via biometrics using the DEK stashed in secure storage. On iOS
+  /// the entry is hardware-bound, so the OS runs the Face ID check as part of
+  /// the keychain read itself — prompting here too would ask the user twice.
+  /// Legacy (pre-v0.11.0) stashes and other platforms keep the app-layer
+  /// prompt; legacy stashes are upgraded to the bound policy on success.
   Future<bool> unlockWithBiometrics() async {
-    final ok = await _biometric.authenticate('Unlock your ClientVault');
-    if (!ok) return false;
+    final hwBound = await _secure.isDekHardwareBound();
+    final osGated = hwBound && defaultTargetPlatform == TargetPlatform.iOS;
+    if (!osGated) {
+      final ok = await _biometric.authenticate('Unlock your ClientVault');
+      if (!ok) return false;
+    }
     final base64Dek = await _secure.readDek();
     if (base64Dek == null) return false;
     _dek = SecretKey(base64Decode(base64Dek));
     state = VaultStatus.unlocked;
+    if (!hwBound) await _upgradeBiometricStash();
     return true;
+  }
+
+  /// One-time migration: re-stashes a pre-v0.11.0 DEK under the
+  /// hardware-bound keychain policy. Runs after any successful unlock.
+  Future<void> _upgradeBiometricStash() async {
+    final dek = _dek;
+    if (dek == null) return;
+    if (!await _secure.hasDek()) return;
+    if (await _secure.isDekHardwareBound()) return;
+    await _secure.writeDek(base64Encode(await dek.extractBytes()));
   }
 
   /// Clears the in-memory key and returns to the locked screen.
