@@ -103,6 +103,11 @@ class SettingsScreen extends ConsumerWidget {
                 ? () => _sendTestNotification(context, ref)
                 : null,
           ),
+          const _SoonTile(
+            icon: Icons.podcasts_outlined,
+            title: 'Push notifications',
+            subtitle: 'Repo activity and cross-device alerts, with the cloud',
+          ),
           const _SectionHeader('Security'),
           ListTile(
             leading: const Icon(
@@ -143,7 +148,7 @@ class SettingsScreen extends ConsumerWidget {
             leading: Icon(Icons.info_outline, color: AppColors.textSecondary),
             title: Text('Version'),
             trailing: Text(
-              '0.13.0',
+              '0.14.0',
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ),
@@ -301,16 +306,18 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _SoonTile extends StatelessWidget {
-  const _SoonTile({required this.icon, required this.title});
+  const _SoonTile({required this.icon, required this.title, this.subtitle});
 
   final IconData icon;
   final String title;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: AppColors.textSecondary),
       title: Text(title),
+      subtitle: subtitle == null ? null : Text(subtitle!),
       trailing: const _SoonChip(),
     );
   }

@@ -4,6 +4,25 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+## [0.14.0] - 2026-06-10
+
+**Push groundwork + the cloud wire-up guide.** The last scaffolding before
+backend provisioning starts.
+
+### Added
+- `PushRegistrationService` — the seam where APNs registration plugs in once
+  the AWS relay (SNS/Pinpoint) exists; local due-date reminders are untouched
+  and keep working offline.
+- Settings → Notifications gains a "Push notifications" entry marked **Soon**
+  (repo activity and cross-device alerts arrive with the cloud).
+
+### Documentation
+- **`docs/cloud-setup.md`** — the complete provisioning playbook: Amplify
+  Gen 2 + Cognito, Sign in with Apple (Services ID, entitlement, match
+  profile regen), Google OAuth, RevenueCat + App Store Connect products,
+  APNs key + relay, and the compliance checklist — each with the exact
+  provider/repository in the code where it plugs in.
+
 ## [0.13.0] - 2026-06-10
 
 **Plans & subscriptions.** The paywall and entitlement layer for the
