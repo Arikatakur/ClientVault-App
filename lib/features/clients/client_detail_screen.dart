@@ -85,7 +85,8 @@ class _ClientDetailView extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.edit_outlined),
             tooltip: 'Edit client',
-            onPressed: () => showClientFormSheet(context, ref, existing: client),
+            onPressed: () =>
+                showClientFormSheet(context, ref, existing: client),
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline),

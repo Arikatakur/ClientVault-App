@@ -62,12 +62,20 @@ void main() {
 
     test('re-wrapping the DEK opens under the new key only', () async {
       final dekBytes = await service.newDataKey().extractBytes();
-      final kek1 = await service.deriveKek('old-pass', service.newSalt(), params);
+      final kek1 = await service.deriveKek(
+        'old-pass',
+        service.newSalt(),
+        params,
+      );
       final wrapped1 = await service.seal(dekBytes, kek1);
 
       // Change password: unwrap with the old key, re-wrap with a new salt+key.
       final unwrapped = await service.open(wrapped1, kek1);
-      final kek2 = await service.deriveKek('new-pass', service.newSalt(), params);
+      final kek2 = await service.deriveKek(
+        'new-pass',
+        service.newSalt(),
+        params,
+      );
       final wrapped2 = await service.seal(unwrapped, kek2);
 
       expect(await service.open(wrapped2, kek2), equals(dekBytes));

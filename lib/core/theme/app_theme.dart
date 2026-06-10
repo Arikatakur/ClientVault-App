@@ -9,23 +9,24 @@ abstract final class AppTheme {
   AppTheme._();
 
   static ThemeData get dark {
-    final ColorScheme scheme = ColorScheme.fromSeed(
-      seedColor: AppColors.accent,
-      brightness: Brightness.dark,
-    ).copyWith(
-      primary: AppColors.accent,
-      onPrimary: Colors.white,
-      surface: AppColors.background,
-      onSurface: AppColors.textPrimary,
-      surfaceContainerLowest: AppColors.background,
-      surfaceContainerLow: AppColors.surface,
-      surfaceContainer: AppColors.surface,
-      surfaceContainerHigh: AppColors.surfaceElevated,
-      surfaceContainerHighest: AppColors.surfaceElevated,
-      outline: AppColors.outline,
-      outlineVariant: AppColors.outline,
-      error: AppColors.danger,
-    );
+    final ColorScheme scheme =
+        ColorScheme.fromSeed(
+          seedColor: AppColors.accent,
+          brightness: Brightness.dark,
+        ).copyWith(
+          primary: AppColors.accent,
+          onPrimary: Colors.white,
+          surface: AppColors.background,
+          onSurface: AppColors.textPrimary,
+          surfaceContainerLowest: AppColors.background,
+          surfaceContainerLow: AppColors.surface,
+          surfaceContainer: AppColors.surface,
+          surfaceContainerHigh: AppColors.surfaceElevated,
+          surfaceContainerHighest: AppColors.surfaceElevated,
+          outline: AppColors.outline,
+          outlineVariant: AppColors.outline,
+          error: AppColors.danger,
+        );
 
     final ThemeData base = ThemeData(
       useMaterial3: true,
@@ -102,7 +103,9 @@ abstract final class AppTheme {
         thickness: 1,
         space: 1,
       ),
-      listTileTheme: const ListTileThemeData(iconColor: AppColors.textSecondary),
+      listTileTheme: const ListTileThemeData(
+        iconColor: AppColors.textSecondary,
+      ),
       inputDecorationTheme: InputDecorationThemeData(
         filled: true,
         fillColor: AppColors.surfaceElevated,

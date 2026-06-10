@@ -76,11 +76,13 @@ class AppDatabase extends _$AppDatabase {
               .map((row) => row.read(projects.id)!)
               .get();
       if (projectIds.isNotEmpty) {
-        await (delete(payments)..where((p) => p.projectId.isIn(projectIds)))
-            .go();
+        await (delete(
+          payments,
+        )..where((p) => p.projectId.isIn(projectIds))).go();
       }
-      await (delete(attachments)
-            ..where((a) => a.clientId.equals(id) | a.projectId.isIn(projectIds)))
+      await (delete(
+            attachments,
+          )..where((a) => a.clientId.equals(id) | a.projectId.isIn(projectIds)))
           .go();
       await (delete(projects)..where((p) => p.clientId.equals(id))).go();
       await (delete(clients)..where((c) => c.id.equals(id))).go();
@@ -110,8 +112,9 @@ class AppDatabase extends _$AppDatabase {
 
   /// Watches a single project by id, emitting `null` once it is deleted.
   Stream<Project?> watchProject(String id) {
-    return (select(projects)..where((p) => p.id.equals(id)))
-        .watchSingleOrNull();
+    return (select(
+      projects,
+    )..where((p) => p.id.equals(id))).watchSingleOrNull();
   }
 
   Future<int> insertProject(ProjectsCompanion entry) =>
@@ -134,8 +137,9 @@ class AppDatabase extends _$AppDatabase {
 
   /// The single vault crypto-config row, or `null` if the vault is not set up.
   Future<VaultConfig?> getVaultConfig() {
-    return (select(vaultConfigs)..where((c) => c.id.equals(vaultConfigId)))
-        .getSingleOrNull();
+    return (select(
+      vaultConfigs,
+    )..where((c) => c.id.equals(vaultConfigId))).getSingleOrNull();
   }
 
   /// Creates or replaces the vault crypto config.
@@ -144,10 +148,9 @@ class AppDatabase extends _$AppDatabase {
 
   /// Watches all vault items, alphabetically by title (never decrypts).
   Stream<List<VaultItem>> watchVaultItems() {
-    return (select(vaultItems)..orderBy([
-          (v) => OrderingTerm(expression: v.title),
-        ]))
-        .watch();
+    return (select(
+      vaultItems,
+    )..orderBy([(v) => OrderingTerm(expression: v.title)])).watch();
   }
 
   Future<int> insertVaultItem(VaultItemsCompanion entry) =>

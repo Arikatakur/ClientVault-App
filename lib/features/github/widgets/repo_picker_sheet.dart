@@ -71,8 +71,7 @@ class _RepoPickerState extends ConsumerState<_RepoPicker> {
             const SizedBox(height: AppSpacing.sm),
             Expanded(
               child: reposAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (_, _) => Center(
                   child: Text(
                     'Could not load repositories.',
@@ -97,10 +96,7 @@ class _RepoPickerState extends ConsumerState<_RepoPicker> {
                             .toList();
                   if (filtered.isEmpty) {
                     return Center(
-                      child: Text(
-                        'No matches.',
-                        style: textTheme.bodyMedium,
-                      ),
+                      child: Text('No matches.', style: textTheme.bodyMedium),
                     );
                   }
                   return ListView.separated(

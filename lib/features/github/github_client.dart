@@ -56,7 +56,10 @@ class GitHubClient {
   }
 
   Future<List<GitHubCommit>> commits(String fullName) async {
-    final data = await _get('/repos/$fullName/commits', query: {'per_page': 30});
+    final data = await _get(
+      '/repos/$fullName/commits',
+      query: {'per_page': 30},
+    );
     final list = (data as List<dynamic>).cast<Map<String, dynamic>>();
     return list.map(GitHubCommit.fromJson).toList();
   }

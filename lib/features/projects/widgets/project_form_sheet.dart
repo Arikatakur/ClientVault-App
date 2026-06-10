@@ -24,9 +24,7 @@ Future<void> showProjectFormSheet(
   final clients = ref.read(clientsStreamProvider).value ?? const <Client>[];
   if (clients.isEmpty) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Add a client first to attach a project.'),
-      ),
+      const SnackBar(content: Text('Add a client first to attach a project.')),
     );
     return;
   }
@@ -131,9 +129,7 @@ class _ProjectFormState extends State<_ProjectForm> {
     _budget = TextEditingController(text: _budgetToText(project?.budget));
     _description = TextEditingController(text: project?.description ?? '');
     _clientId =
-        widget.lockedClientId ??
-        project?.clientId ??
-        widget.clients.first.id;
+        widget.lockedClientId ?? project?.clientId ?? widget.clients.first.id;
     _status = project != null
         ? ProjectStatus.fromValue(project.status)
         : ProjectStatus.lead;
@@ -193,9 +189,7 @@ class _ProjectFormState extends State<_ProjectForm> {
     final textTheme = Theme.of(context).textTheme;
     final lockedName = widget.lockedClientId == null
         ? null
-        : widget.clients
-              .firstWhere((c) => c.id == widget.lockedClientId)
-              .name;
+        : widget.clients.firstWhere((c) => c.id == widget.lockedClientId).name;
 
     return Padding(
       padding: EdgeInsets.only(

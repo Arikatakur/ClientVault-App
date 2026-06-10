@@ -114,7 +114,9 @@ class NotificationService {
         notificationDetails: _reminderDetails,
         payload: payload,
       );
-    } catch (_) {/* best-effort */}
+    } catch (_) {
+      /* best-effort */
+    }
   }
 
   /// Schedules a reminder at [when] (local time). Past times are ignored by the
@@ -137,19 +139,25 @@ class NotificationService {
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: payload,
       );
-    } catch (_) {/* best-effort */}
+    } catch (_) {
+      /* best-effort */
+    }
   }
 
   Future<void> cancel(int id) async {
     try {
       await _plugin.cancel(id: id);
-    } catch (_) {/* best-effort */}
+    } catch (_) {
+      /* best-effort */
+    }
   }
 
   Future<void> cancelAll() async {
     try {
       await _plugin.cancelAll();
-    } catch (_) {/* best-effort */}
+    } catch (_) {
+      /* best-effort */
+    }
   }
 
   /// Notifications scheduled but not yet delivered (empty if unavailable).

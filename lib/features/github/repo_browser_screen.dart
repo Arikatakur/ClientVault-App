@@ -152,11 +152,7 @@ class _CommitTile extends StatelessWidget {
         backgroundColor: AppColors.accentSoft,
         child: Icon(Icons.commit, size: 18, color: AppColors.accent),
       ),
-      title: Text(
-        commit.summary,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-      ),
+      title: Text(commit.summary, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Text(meta),
       onTap: () => _showFull(context),
     );

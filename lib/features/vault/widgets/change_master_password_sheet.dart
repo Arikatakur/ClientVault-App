@@ -60,9 +60,9 @@ class _ChangeMasterPasswordSheetState
     if (!mounted) return;
     if (ok) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Master password changed.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Master password changed.')));
     } else {
       setState(() {
         _busy = false;

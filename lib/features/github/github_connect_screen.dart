@@ -45,7 +45,9 @@ class _GitHubConnectScreenState extends ConsumerState<GitHubConnectScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('GitHub')),
       body: switch (state.status) {
-        GitHubStatus.loading => const Center(child: CircularProgressIndicator()),
+        GitHubStatus.loading => const Center(
+          child: CircularProgressIndicator(),
+        ),
         GitHubStatus.connected => _ConnectedView(
           user: state.user!,
           onDisconnect: _disconnect,
@@ -161,11 +163,7 @@ class _ConnectForm extends StatelessWidget {
               color: AppColors.accentSoft,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.code,
-              size: 34,
-              color: AppColors.accent,
-            ),
+            child: const Icon(Icons.code, size: 34, color: AppColors.accent),
           ),
         ),
         const SizedBox(height: AppSpacing.lg),
