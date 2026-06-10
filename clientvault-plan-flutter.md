@@ -5,6 +5,36 @@
 
 ---
 
+## Status — MVP progress (updated 2026-06-10, v0.11.0)
+
+Day-to-day tracking lives in the Notion **"Mobile App — Project Hub"** (Tasks & Bugs board); this section keeps the plan honest about what of §3 actually shipped.
+
+**Scope changes since this plan was written**
+
+- **iOS-only for now** (decided 2026-06-10). The codebase still builds for Android, but Android-specific work — native biometric wiring, `FLAG_SECURE`, Play releases — is deferred until an Android launch is planned.
+- **GitHub auth shipped as a fine-grained PAT** instead of OAuth + PKCE (no backend → no safe place for a client secret). OAuth device flow remains a candidate for later.
+
+**Shipped (v0.1.0 → v0.11.0)**
+
+- Clients, projects (linked), payments with partial/split amounts and roll-ups, dashboard with live stats and recent activity.
+- Encrypted vault end to end: Argon2id + AES-256-GCM envelope encryption, master password setup/change, biometric unlock, reveal/copy with 30s clipboard auto-clear, app-wide auto-lock (background + idle).
+- v0.11.0 security closures: **app-switcher privacy shield** (the iOS "blur on app switch" from §7's hardening checklist) and a **hardware-bound biometric DEK** — the keychain entry itself now requires the currently enrolled Face ID set (`biometryCurrentSet`), instead of an app-layer-only gate.
+- GitHub: PAT connect, repo link + live status card, commits/issues/PRs browser.
+- File attachments (clients & projects) with in-app PDF viewer; local due-date reminders; Windows → TestFlight CI/CD.
+
+**Remaining MVP scope (§3 / §11 items not yet shipped)**
+
+- [ ] **Encrypted local backup/export + import** (FR-10, NFR-5) — Settings tiles are still "Soon". The biggest remaining MVP gap.
+- [ ] **Link vault items to clients/projects in the UI** (FR-6) — the data model has the FKs; no UI yet.
+- [ ] **Tags** for clients/projects/vault items (FR-1, §5) — `Tag` tables never built.
+- [ ] **Search clients/projects by name** (FR-9) — vault title search shipped; clients/projects lists have no search field.
+- [ ] **Android security parity** (NFR-1/NFR-4) — native biometric wiring + `FLAG_SECURE`; deferred with the iOS-only decision.
+- [ ] §7 hardening stragglers: failed-unlock throttling/lockout, Argon2id cost above the OWASP floor, PBKDF2 fallback for old devices.
+
+Post-MVP (cloud sync, accounts, subscriptions) is being planned separately — see the Notion "Cloud + Subscriptions — Plan" page.
+
+---
+
 ## 0. Locked decisions
 
 | # | Decision | Choice | Notes |
