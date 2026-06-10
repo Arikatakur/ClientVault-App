@@ -4,6 +4,67 @@ All notable changes to ClientVault are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and the project uses
 [semantic versioning](https://semver.org/).
 
+> **Architecture reset (2026-06).** ClientVault was rebuilt from a local-first
+> Flutter app into a **native iOS (SwiftUI) app on a cloud backend**, following
+> [`docs/rewrite-blueprint.md`](docs/rewrite-blueprint.md). The native app
+> **continues the version line at `0.18.0`** — not `0.1.0` — because App Store
+> Connect requires each TestFlight/App Store upload to have a higher version and
+> build number than the last, and the Flutter app already shipped `0.17.0+19`.
+> Entries at `0.17.0` and below describe the archived **Flutter era** (now under
+> [`legacy/flutter/`](legacy/flutter/)).
+
+## [0.18.0] - 2026-06-11
+
+**Native rewrite — Phase 1 foundation (SwiftUI + cloud).** The first slice of the
+[rewrite blueprint](docs/rewrite-blueprint.md): the app scaffold, design system,
+navigation shell, privacy shield, and the core service seams later phases build on.
+
+### Added
+- **Native SwiftUI app scaffold** generated from `project.yml` (XcodeGen), iOS 17+,
+  iPhone-first, dark UI. Targets `ClientVault` + `ClientVaultTests`.
+- **Five-tab navigation shell** (`TabView` + one `NavigationStack` per tab):
+  Dashboard, Projects, Clients, Vault, Settings — each with a native, branded
+  empty/placeholder state, search bars, and toolbar actions.
+- **Design system** (`Core/DesignSystem`): color palette, type ramp, 4-pt spacing
+  + radius tokens, a single motion spec (durations/springs), and a haptics service.
+- **Privacy shield**: a branded lock cover driven by scene phase that hides the UI
+  the instant the app goes inactive/background, so the app-switcher snapshot never
+  shows sensitive content. The vault auto-locks on background.
+- **Core service seams** for later phases: `APIClient` (URLSession + structured
+  `APIError`, auth/refresh/retry, offline & rate-limit mapping), `KeychainStore`
+  + `TokenStore`, an `AppEnvironment` DI container, `SessionStore`,
+  `EntitlementStore`, push registration, and local-notification scheduling.
+- **Auth screen** with Sign in with Apple + Google buttons (flows wired to the
+  session seam; backend validation lands in the Auth phase).
+- **Domain + DTO models** for clients, projects, payments, and vault items, with
+  DTO ↔ domain mapping (unknown enum values degrade safely).
+- **Docs**: in-repo blueprint, SwiftUI architecture, zero-knowledge security model,
+  AWS Amplify Gen 2 backend plan, and the version-milestone map.
+- **CI**: `ios-ci.yml` generates the project and runs unit tests on an iOS Simulator.
+
+### Security
+- **Zero-knowledge vault crypto core**: real AES-256-GCM (CryptoKit) seal/open and
+  key wrapping, an `EncryptedPayload` (nonce + ciphertext + tag + version) that is
+  the *only* form vault secrets take on the wire, and a `VaultKeyManager` key
+  hierarchy (Master Key → KEK via HKDF → wrapped DEK).
+- **Argon2id KDF is an explicit, unimplemented seam** — it throws rather than
+  silently substituting a weaker derivation, so no build can ship non-Argon2id
+  password hashing. A vetted dependency is integrated in the Vault phase.
+- Keychain items are `ThisDeviceOnly`; refresh token in Keychain, access token in
+  memory only; biometric-protected (`biometryCurrentSet`) storage seam included.
+
+### Changed
+- **Archived the Flutter app** to `legacy/flutter/` (source, Android/iOS runners,
+  Flutter CI workflows, and Flutter docs). It is preserved in git history but no
+  longer built.
+- Repointed `CLAUDE.md` and `README.md` to the SwiftUI + Amplify architecture; the
+  version source moved from `pubspec.yaml` to `project.yml`.
+
+### Internal
+- Foundation unit tests: AES-GCM round-trip, wrong-key/tamper rejection, nonce
+  uniqueness, key wrap/unwrap, payload JSON round-trip, design-token ordering, and
+  DTO ↔ domain mapping.
+
 ## [0.17.0] - 2026-06-10
 
 **List search.** The last piece of FR-9.

@@ -2,38 +2,44 @@
 
 ## Project Instructions for Claude Code
 
-This file defines the development workflow, Git rules, versioning system, commit style, changelog requirements, release process, and Flutter-specific engineering standards for this project.
+This file defines the development workflow, Git rules, versioning system, commit
+style, changelog requirements, release process, and engineering standards for
+**ClientVault** — now a **native iOS (SwiftUI) app with a cloud backend**.
 
 Claude must follow these instructions whenever working on this repository.
+
+> **Architecture pivot (2026-06):** ClientVault was rewritten from a local-first
+> Flutter app into a native SwiftUI + cloud app, per
+> [`docs/rewrite-blueprint.md`](docs/rewrite-blueprint.md) (the single source of
+> truth). The Flutter codebase is archived under [`legacy/flutter/`](legacy/flutter/)
+> for reference and is no longer built. The native app **continues the version
+> line at `0.18.0`** (not `0.1.0`): App Store Connect requires every upload to have
+> a higher version/build than the last, and the Flutter app already shipped
+> `0.17.0+19`.
 
 ---
 
 # 1. Project Context
 
-This is a Flutter mobile app project.
+This is a **native iOS** app.
 
-Target platforms:
+Target platform:
 
-- iOS
-- Later: Android
-- Later optional: Windows, macOS, Linux
+- iOS (iPhone-first). Android is explicitly **out of scope**.
 
 Primary stack:
 
-- Flutter
-- Dart
-- Material 3
-- Riverpod
-- go_router
-- Drift / SQLite
-- flutter_secure_storage
-- local_auth
-- GitHub Actions
-- Fastlane / TestFlight
+- **SwiftUI** + **Swift Concurrency** (async/await)
+- **Observation** (`@Observable`) for state
+- `NavigationStack` / `TabView` for navigation
+- **CryptoKit** (AES-256-GCM) + Argon2id (vetted dependency, vault phase) for the zero-knowledge vault
+- **Keychain** for key material and tokens (never `UserDefaults`)
+- Backend: **AWS Amplify Gen 2** (Cognito auth, AppSync/API Gateway, DynamoDB, S3, SNS/Pinpoint push) — see [`docs/backend-amplify.md`](docs/backend-amplify.md)
+- **XcodeGen** (`project.yml`) generates the Xcode project (authored on Windows; built on macOS/CI)
+- GitHub Actions (macOS runners) · Fastlane / TestFlight
 
-The app is intended to become a real production mobile app, not just a demo.
-
-Claude should behave like a senior Flutter engineer.
+ClientVault is intended to become a real production app, not a demo. Claude
+should behave like a senior iOS engineer.
 
 ---
 
@@ -43,848 +49,295 @@ Every meaningful update must be treated as a versioned change.
 
 After each completed version, Claude must:
 
-1. Update the app version.
+1. Update the app version (see §3–4).
 2. Update the changelog.
 3. Create clear commits.
-4. Push the changes to GitHub.
+4. Push to GitHub (when the user asks / when appropriate).
 5. Clearly explain what changed.
 
-Do not leave important work uncommitted.
-
-Do not commit broken builds unless the commit is clearly marked as a temporary work-in-progress and the app still runs.
+Do not leave important work uncommitted. Do not commit broken builds unless
+clearly marked work-in-progress and the app still builds.
 
 ---
 
 # 3. Versioning System
 
-Use semantic versioning:
+Semantic versioning: `x.y.z`.
 
-```txt
-x.y.z
-```
+## 3.1 Version meaning
 
-Examples:
+### x — Major
 
-```txt
-0.1.0
-0.2.0
-0.2.1
-1.0.0
-```
+Big/breaking changes: heavy architecture changes, breaking changes to the cloud
+data model or crypto/storage format, a major feature set, or a public-launch
+milestone (e.g. `0.9.0 → 1.0.0`).
 
-## 3.1 Version Meaning
+### y — Minor
 
-### x = Major Version
+New feature / screen / module / service, or a significant improvement. Reset `z`
+to 0 (`0.2.4 → 0.3.0`).
 
-Increase `x` for big changes.
+### z — Patch
 
-Use this when:
-
-- the app architecture changes heavily
-- core data/storage structure changes in a breaking way
-- old local database migrations may not be compatible
-- a major feature set is added
-- the app reaches a public launch milestone
-- the app moves from MVP to production-ready
-
-Examples:
-
-```txt
-0.9.0 -> 1.0.0
-1.0.0 -> 2.0.0
-```
-
-Example major updates:
-
-- App Store launch version
-- replacing the whole app architecture
-- moving from local-only to cloud sync
-- redesigning the entire app navigation
-- changing the encryption/storage model in a breaking way
+Bug fixes, UI details, refactors, copy changes, performance, CI fixes
+(`0.1.0 → 0.1.1`).
 
 ---
 
-### y = Minor Version
+# 4. Version Update Rules (where the version lives)
 
-Increase `y` for medium-sized changes.
-
-Use this when:
-
-- adding a new feature
-- adding a new screen
-- adding a new module
-- adding a new service
-- improving an existing system significantly
-- adding TestFlight/App Store release support
-
-Examples:
-
-```txt
-0.1.0 -> 0.2.0
-0.2.0 -> 0.3.0
-```
-
-Example minor updates:
-
-- adding Clients module
-- adding Projects module
-- adding Vault module
-- adding Payments module
-- adding GitHub integration
-- adding Settings screen
-- adding local backup/export
-- adding biometric unlock
-- adding TestFlight pipeline
-
-When increasing `y`, reset `z` to 0.
-
-Example:
-
-```txt
-0.2.4 -> 0.3.0
-```
-
----
-
-### z = Patch Version
-
-Increase `z` for small changes.
-
-Use this when:
-
-- fixing bugs
-- improving UI details
-- refactoring small parts
-- changing text
-- improving animations
-- fixing layout issues
-- cleaning code
-- improving performance without major feature changes
-- fixing CI/CD issues
-
-Examples:
-
-```txt
-0.1.0 -> 0.1.1
-0.1.1 -> 0.1.2
-```
-
-Example patch updates:
-
-- fixing broken navigation
-- fixing iPhone layout overflow
-- fixing Flutter analyzer warnings
-- fixing build number issue
-- fixing GitHub Actions workflow
-- improving card spacing
-- cleaning unused imports
-- fixing TestFlight upload error
-
----
-
-# 4. Flutter Version Update Rules
-
-Whenever a new version is completed, update version numbers in all relevant files.
-
-Common Flutter files may include:
-
-```txt
-pubspec.yaml
-CHANGELOG.md
-README.md
-ios/Runner.xcodeproj/project.pbxproj
-android/app/build.gradle
-```
-
-Primary version source:
-
-```txt
-pubspec.yaml
-```
-
-Flutter version format:
+The **single source of truth** for the version is **`project.yml`** (XcodeGen),
+which sets the build settings that flow into `Info.plist`:
 
 ```yaml
-version: 0.2.0+3
+settings:
+  base:
+    MARKETING_VERSION: "0.18.0"     # user-facing app version (x.y.z)
+    CURRENT_PROJECT_VERSION: "20"   # build number — must increase per TestFlight upload
 ```
 
-Meaning:
-
-```txt
-0.2.0 = user-facing app version
-3 = build number
-```
+`Info.plist` reads these via `$(MARKETING_VERSION)` / `$(CURRENT_PROJECT_VERSION)`.
 
 Rules:
 
-- The semantic version should follow `x.y.z`.
-- The build number after `+` must increase for every TestFlight/App Store build.
-- iOS build number must increase for every upload.
-- Android versionCode must increase for every Play Store build.
-- Do not decrease build numbers.
-
-Example:
-
-```yaml
-version: 0.3.0+7
-```
+- The semantic version follows `x.y.z` in `MARKETING_VERSION`.
+- `CURRENT_PROJECT_VERSION` (build number) must increase for every TestFlight /
+  App Store upload, and must never decrease.
+- Also update `CHANGELOG.md` and `README.md` when they reference the version.
 
 ---
 
 # 5. Commit Message Style
 
-Use conventional commits.
-
-Commit format:
-
-```txt
-type(scope): short description
-```
+Conventional commits: `type(scope): short description`.
 
 Examples:
 
 ```txt
-feat(auth): add biometric unlock
-feat(vault): add encrypted vault item model
-fix(ios): resolve TestFlight signing issue
-docs(readme): add Flutter setup instructions
-chore(deps): update Flutter packages
-ci(github): add iOS release workflow
+feat(auth): add Sign in with Apple flow
+feat(vault): wrap DEK under password-derived KEK
+fix(net): map 429 to rateLimited with Retry-After
+chore(deps): add swift-sodium for Argon2id
+ci(github): build and test on iOS Simulator
+docs(security): document zero-knowledge key hierarchy
 ```
 
 ---
 
 # 6. Allowed Commit Types
 
-Use these commit types:
+`feat`, `fix`, `docs`, `chore`, `refactor`, `style`, `perf`, `test`, `build`, `ci`.
 
-## feat
-
-For new features.
-
-Examples:
-
-```txt
-feat(clients): add client list screen
-feat(projects): add project detail screen
-feat(vault): add encrypted secret reveal flow
-feat(payments): add payment status tracking
-```
+Use the scope to name the area: `auth`, `vault`, `clients`, `projects`,
+`payments`, `dashboard`, `settings`, `net`, `crypto`, `storage`, `push`, `ui`,
+`design`, `ios`, `backend`.
 
 ---
 
-## fix
+# 7. Branch Naming
 
-For bug fixes.
-
-Examples:
+`type/short-description`, lowercase, hyphenated. Examples:
 
 ```txt
-fix(router): prevent redirect loop on startup
-fix(vault): clear clipboard after copying secret
-fix(ui): fix overflow on small iPhones
-fix(ios): correct bundle identifier
-```
-
----
-
-## docs
-
-For documentation changes.
-
-Examples:
-
-```txt
-docs(readme): add setup instructions
-docs(changelog): add version 0.2.0 notes
-docs(security): document vault encryption model
-```
-
----
-
-## chore
-
-For maintenance tasks.
-
-Examples:
-
-```txt
-chore(deps): install riverpod and go_router
-chore(config): update bundle identifier
-chore(project): organize Flutter folders
-```
-
----
-
-## refactor
-
-For code changes that do not change behavior.
-
-Examples:
-
-```txt
-refactor(core): split app services
-refactor(vault): move crypto logic into service layer
-```
-
----
-
-## style
-
-For formatting or visual code style changes that do not affect logic.
-
-Examples:
-
-```txt
-style(theme): adjust Material 3 colors
-style(ui): clean dashboard card spacing
-```
-
----
-
-## perf
-
-For performance improvements.
-
-Examples:
-
-```txt
-perf(db): reduce unnecessary rebuilds
-perf(vault): avoid bulk decrypting vault items
-```
-
----
-
-## test
-
-For test-related changes.
-
-Examples:
-
-```txt
-test(vault): add encryption service tests
-test(router): add navigation guard tests
-```
-
----
-
-## build
-
-For build system changes.
-
-Examples:
-
-```txt
-build(ios): configure app signing
-build(android): configure release bundle
-build(flutter): update pubspec version
-```
-
----
-
-## ci
-
-For CI/CD changes.
-
-Examples:
-
-```txt
-ci(github): add Flutter analyze workflow
-ci(github): add TestFlight release workflow
-ci(match): add iOS signing bootstrap workflow
-```
-
----
-
-# 7. Branch Naming Rules
-
-When creating a branch, use this format:
-
-```txt
-type/short-description
-```
-
-Examples:
-
-```txt
-feat/client-crud
-feat/vault-module
-fix/ios-signing
-docs/update-readme
-chore/flutter-setup
-refactor/app-architecture
+feat/auth-apple-google
+feat/vault-crypto
+fix/privacy-shield-snapshot
 ci/testflight-release
 ```
 
-Keep branch names lowercase.
-
-Use hyphens instead of spaces.
-
 ---
 
-# 8. Changelog Rules
+# 8–9. Changelog
 
-Claude must maintain a file called:
+Maintain `CHANGELOG.md` for every version, newest first, using
+[Keep a Changelog](https://keepachangelog.com/) categories — only those with
+content:
 
 ```txt
-CHANGELOG.md
+Added · Changed · Fixed · Removed · Deprecated · Security · Performance · Documentation · Internal
 ```
 
-The changelog must be updated for every version.
-
-Use this format:
+Format:
 
 ```md
-# Changelog
-
-## [0.2.0] - 2026-06-07
+## [0.2.0] - 2026-06-20
 
 ### Added
-- Added client list screen.
-- Added project detail screen.
-- Added base Drift database schema.
+- Sign in with Apple + Google, with backend token validation.
 
-### Changed
-- Improved dashboard layout.
-- Updated app routing structure.
-
-### Fixed
-- Fixed iOS build number issue.
+### Security
+- Refresh token stored in Keychain; access token kept in memory only.
 ```
-
----
-
-# 9. Changelog Categories
-
-Use these categories when relevant:
-
-```txt
-Added
-Changed
-Fixed
-Removed
-Deprecated
-Security
-Performance
-Documentation
-Internal
-```
-
-Only include categories that have content.
-
-Do not add empty categories.
 
 ---
 
 # 10. GitHub Push Rules
 
-After each completed version:
-
-```bash
-git status
-git add .
-git commit -m "type(scope): message"
-git push
-```
-
-If there are multiple logical changes, split them into multiple commits.
-
-Example:
-
-```bash
-git add lib/features/clients lib/core/router
-git commit -m "feat(clients): add client list and detail routes"
-
-git add CHANGELOG.md pubspec.yaml
-git commit -m "docs(release): add changelog for 0.2.0"
-
-git push
-```
-
-Do not make one huge commit if the work contains unrelated changes.
+After a completed version: `git status` → stage logically → conventional
+commit(s) → push. Split unrelated changes into separate commits.
 
 ---
 
 # 11. When to Commit
 
-Commit after a clean, working step.
-
-Good commit points:
-
-- Flutter scaffold completed
-- navigation completed
-- one screen completed
-- one feature module completed
-- database migration completed
-- bug fixed
-- changelog updated
-- version bumped
-- TestFlight config updated
-- CI workflow fixed
-
-Bad commit points:
-
-- broken Dart analyzer
-- app cannot start
-- incomplete unfinished feature that breaks navigation
-- temporary debugging code
-- commented-out broken code
-- secrets accidentally added to files
-
-If a feature is partially done but the app still works, the commit message should make that clear.
-
-Example:
-
-```txt
-feat(vault): add encrypted item model and placeholder UI
-```
+Good points: scaffold complete, a screen/module complete, crypto primitive
+done, a migration done, a bug fixed, changelog/version bumped, CI fixed. Avoid
+committing broken builds, half-wired features that break navigation, debug code,
+or secrets.
 
 ---
 
 # 12. Development Workflow
 
-For each task, Claude should follow this workflow:
-
-1. Read the existing project structure.
-2. Understand the requested change.
-3. Make a short implementation plan.
-4. Edit files.
-5. Run checks where possible.
-6. Fix errors.
-7. Update documentation if needed.
-8. Update changelog if the change is versioned.
-9. Commit using conventional commits.
-10. Push to GitHub.
-11. Report what changed.
+1. Read structure. 2. Understand the change. 3. Short plan. 4. Edit. 5. Run
+checks. 6. Fix errors. 7. Update docs. 8. Update changelog (if versioned).
+9. Conventional commit. 10. Push. 11. Report.
 
 ---
 
 # 13. Checks Before Committing
 
-Before committing, Claude should run available checks.
-
-Use whichever scripts/files exist in the project.
-
-Common Flutter commands:
+This repo is authored on **Windows**, where Xcode cannot run. Locally, validate
+what you can:
 
 ```bash
-flutter pub get
-dart format .
-flutter analyze
-flutter test
-flutter build apk --debug
+# Validate the project spec generates (requires xcodegen; macOS or CI):
+xcodegen generate
+
+# On macOS / CI — build + test on a simulator (no signing needed):
+xcodebuild -project ClientVault.xcodeproj -scheme ClientVault \
+  -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \
+  CODE_SIGNING_ALLOWED=NO clean test
 ```
 
-For code generation:
-
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
-
-For iOS CI files or Fastlane:
-
-```bash
-cd ios
-bundle exec fastlane lanes
-```
-
-Only run commands that make sense for the current environment.
-
-If a command does not exist or cannot run, explain why.
-
-If a check fails, fix it before committing.
+If a check cannot run in the current environment (e.g. `xcodebuild` on Windows),
+say so explicitly and rely on **CI** (`.github/workflows/ios-ci.yml`) to compile
+and test. Treat the first green CI run as the build-verification gate.
 
 ---
 
-# 14. Flutter Architecture Rules
-
-Use a clean feature-first structure.
-
-Recommended structure:
+# 14. Architecture Rules (feature-first SwiftUI)
 
 ```txt
-lib/
-  main.dart
-  app.dart
-
-  core/
-    config/
-    constants/
-    database/
-    errors/
-    router/
-    security/
-    services/
-    theme/
-    utils/
-
-  features/
-    dashboard/
-      data/
-      domain/
-      presentation/
-    clients/
-      data/
-      domain/
-      presentation/
-    projects/
-      data/
-      domain/
-      presentation/
-    payments/
-      data/
-      domain/
-      presentation/
-    vault/
-      data/
-      domain/
-      presentation/
-    github/
-      data/
-      domain/
-      presentation/
-    settings/
-      data/
-      domain/
-      presentation/
-
-  shared/
-    widgets/
-    models/
-    providers/
+ClientVault/
+  App/            ClientVaultApp, RootView, MainTabView, AppEnvironment (DI), SessionStore
+  Core/
+    Config/       AppConfig (non-secret build config)
+    Networking/   APIClient + URLSession impl, Endpoint, APIError
+    Crypto/       CryptoService (AES-GCM), KeyDerivation (Argon2id), VaultKeyManager, EncryptedPayload
+    Storage/      KeychainStore, TokenStore
+    DesignSystem/ Palette, Typography, Spacing, Motion, Haptics
+  Features/       Auth/ Dashboard/ Clients/ Projects/ Payments/ Vault/ Settings/
+  SharedUI/       Components/ (EmptyState, PrimaryButton, Card, …), Animations/, PrivacyShieldView
+  Services/       Push/, Notifications/ (local), Entitlements/
+  APIModels/      Codable DTOs (wire shapes)
+  Domain/         Entities, VaultConfig, Mapping (DTO ↔ domain)
+  Resources/      Info.plist, ClientVault.entitlements, Assets.xcassets
+ClientVaultTests/ unit tests (crypto, mapping, design tokens)
 ```
 
-Rules:
-
-- Keep UI, data, and domain logic separated.
-- Avoid giant files.
-- Avoid business logic inside widgets.
-- Use Riverpod providers for state and dependency injection.
-- Use repositories/services for data access.
-- Keep reusable widgets in `shared/widgets`.
-- Keep app-wide constants in `core/constants`.
-- Keep themes in `core/theme`.
-- Keep routing in `core/router`.
+Rules: keep UI / domain / data separated; no business logic in views; depend on
+protocols (see `AppEnvironment`); small focused views; reusable UI in `SharedUI`;
+tokens in `DesignSystem`; no giant files; no god objects.
 
 ---
 
-# 15. State Management Rules
+# 15. State Management
 
-Use Riverpod.
-
-Rules:
-
-- Prefer `Notifier`, `AsyncNotifier`, or providers depending on complexity.
-- Avoid global mutable variables.
-- Keep provider names clear.
-- Use `AsyncValue` for loading/error/data states.
-- Do not hide errors silently.
-- Avoid unnecessary rebuilds.
-- Keep network/database logic outside widgets.
-
-Example naming:
-
-```txt
-clientRepositoryProvider
-clientListProvider
-selectedClientProvider
-vaultUnlockControllerProvider
-```
+- Use **Observation** (`@Observable` classes) for view models / stores; inject
+  via the SwiftUI `environment`.
+- Surface loading/error/empty states explicitly; never hide errors.
+- Keep network/crypto/storage out of views.
+- Naming: `SessionStore`, `EntitlementStore`, `ClientsViewModel`, etc.
 
 ---
 
-# 16. Navigation Rules
+# 16. Navigation
 
-Use `go_router`.
-
-Rules:
-
-- Keep route definitions centralized.
-- Use named routes when possible.
-- Protect locked vault routes.
-- Avoid stringly-typed navigation spread across the app.
-- Use bottom tabs for main sections.
-- Use pushed detail routes for client/project/vault details.
-
-Main tabs:
-
-```txt
-Dashboard
-Projects
-Clients
-Vault
-Settings
-```
+- `TabView` for the five main tabs; one `NavigationStack` per tab (state
+  preserved independently).
+- Native list behaviors: swipe actions, context menus, integrated `.searchable`.
+- Sheets use detents + material; disable interactive dismiss for destructive ops
+  unless confirmed.
+- Tabs: **Dashboard · Projects · Clients · Vault · Settings**.
 
 ---
 
-# 17. Database Rules
+# 17. Data & Sync (cloud-first)
 
-Use Drift / SQLite for local-first storage.
-
-Rules:
-
-- Store normal app data locally.
-- Use migrations for schema changes.
-- Never break old local data without migration.
-- Keep database tables typed and documented.
-- Avoid raw SQL unless necessary.
-- Use repositories to access Drift DAOs/tables.
-- Do not store secrets in plaintext.
-
-Recommended entities:
-
-```txt
-Client
-Project
-Payment
-VaultItem
-Tag
-VaultMeta
-```
+- The backend (AWS Amplify Gen 2) is the source of truth; local cache is optional
+  (GRDB/SwiftData if added).
+- All rows scoped by `userId`; enforce at the auth-rule / IAM level — no data
+  leaks across users.
+- Per-entity `createdAt`/`updatedAt` + soft delete (`deletedAt`) for safe sync.
+  Vault items: last-write-wins. See [`docs/backend-amplify.md`](docs/backend-amplify.md).
 
 ---
 
-# 18. Security Rules
+# 18. Security Rules (core requirement)
 
-This project may store sensitive user data.
+ClientVault stores sensitive user data. Treat security as non-negotiable.
 
-Claude must treat security as a core requirement.
+- **Vault secret fields must be encrypted on-device (AES-GCM) before any network
+  transmission.** The server stores ciphertext only — never plaintext, never the
+  master key. If unsure, stop and implement encryption first.
+- Do not log or send to analytics any secret, token, password, or decrypted
+  vault field.
+- Key material and tokens live in the **Keychain** (`ThisDeviceOnly`), never in
+  `UserDefaults`. Access token in memory; refresh token in Keychain.
+- Use only vetted crypto (CryptoKit AES-GCM; Argon2id via a vetted library). Do
+  not invent cryptography. Use random nonces (CryptoKit default) — never reuse.
+- Clipboard auto-clear after copying a secret.
+- App-switcher snapshot protection via the privacy shield (cover instantly on
+  inactive/background).
+- Auto-lock the vault on background/timeout.
+- Brute-force protection: local exponential backoff + server-side rate limits.
+- TLS only; certificate pinning optional.
 
-Rules:
+Never commit: `.env`, `.p8`, `.p12`, `.mobileprovision`, certificates, API keys,
+tokens, passwords, `amplify_outputs.json` / `amplifyconfiguration.json`.
 
-- Do not commit real secrets.
-- Do not log vault secrets, tokens, passwords, or API keys.
-- Do not store secret values in plaintext local storage.
-- Use `flutter_secure_storage` for tokens and key material.
-- Use vetted crypto libraries only.
-- Do not invent custom cryptography.
-- Use AES-GCM or other authenticated encryption if encryption code is implemented.
-- Use random nonces correctly.
-- Keep decrypted secrets in memory only as long as needed.
-- Auto-clear clipboard after copied secrets.
-- Add screenshot protection on vault screens where possible.
-- Auto-lock vault on background or timeout.
-- GitHub tokens must be stored securely.
-- Environment values must come from GitHub Secrets or secure config, not committed files.
-
-Never commit:
-
-```txt
-.env
-.p8 files
-.p12 files
-.mobileprovision files
-API keys
-tokens
-passwords
-private signing certificates
-```
+Full model: [`docs/security-model.md`](docs/security-model.md).
 
 ---
 
 # 19. iOS / TestFlight Rules
 
-For iOS builds:
-
-- Bundle ID in code must match App Store Connect.
-- SKU does not need to match code.
-- Build number must increase every upload.
-- Use GitHub Actions macOS runners for iOS builds from Windows.
-- Use Fastlane Match for signing assets.
-- Keep signing repository private.
-- Store App Store Connect API key as a GitHub Secret.
-- Do not commit `.p8` keys.
-- Do not commit signing certificates/profiles.
-- Use release tags for expensive iOS builds.
+- Bundle ID in `project.yml` (`PRODUCT_BUNDLE_IDENTIFIER`) must match App Store
+  Connect.
+- Increase `CURRENT_PROJECT_VERSION` for every upload.
+- Build/sign on GitHub Actions **macOS runners** (no Mac needed locally).
+- Use Fastlane Match for signing; keep the signing repo private.
+- Store App Store Connect API key + Apple credentials as **GitHub Secrets**.
+- Never commit `.p8` keys, certs, or profiles.
 
 Expected secrets:
 
 ```txt
-APP_STORE_CONNECT_API_KEY
-APP_STORE_CONNECT_KEY_ID
-APP_STORE_CONNECT_ISSUER_ID
-APPLE_TEAM_ID
-MATCH_GIT_URL
-MATCH_PASSWORD
-MATCH_GIT_BASIC_AUTHORIZATION
+APP_STORE_CONNECT_API_KEY · APP_STORE_CONNECT_KEY_ID · APP_STORE_CONNECT_ISSUER_ID
+APPLE_TEAM_ID · MATCH_GIT_URL · MATCH_PASSWORD · MATCH_GIT_BASIC_AUTHORIZATION
 ```
 
 ---
 
-# 20. Android Rules
+# 20. CI/CD Rules
 
-For Android builds:
-
-- Keep package name stable once published.
-- Increase versionCode for release builds.
-- Do not commit keystore files.
-- Store signing passwords in GitHub Secrets.
-- Use `flutter build appbundle` for Play Store releases.
-
----
-
-# 21. CI/CD Rules
-
-Use GitHub Actions.
-
-Recommended workflows:
+GitHub Actions. The foundation workflow generates the project and runs tests:
 
 ```txt
-.github/workflows/ci.yml
-.github/workflows/bootstrap-ios-signing.yml
-.github/workflows/release-ios.yml
-.github/workflows/release-android.yml
+.github/workflows/ios-ci.yml         # xcodegen generate → xcodebuild test (simulator)
 ```
 
-CI workflow should usually run:
-
-```bash
-flutter pub get
-dart format --set-exit-if-changed .
-flutter analyze
-flutter test
-```
-
-iOS release workflow should run only on version tags:
-
-```txt
-v*
-```
-
-Example:
-
-```bash
-git tag v0.2.0
-git push origin v0.2.0
-```
+Planned: `release-ios.yml` (tag `v*` → archive + TestFlight via Fastlane),
+`bootstrap-ios-signing.yml` (Match). iOS release workflow runs only on `v*` tags.
 
 ---
 
-# 22. Release Workflow
+# 21. Release Workflow
 
-When preparing a version release:
-
-1. Decide version bump:
-   - major = big/product-breaking change
-   - minor = new feature or system
-   - patch = bug fix or small improvement
-
-2. Update `pubspec.yaml`.
-
-3. Update `CHANGELOG.md`.
-
-4. Run checks.
-
-5. Commit changes.
-
-6. Tag the version.
-
-7. Push commits.
-
-8. Push tags.
-
-Commands:
+1. Decide bump (major/minor/patch). 2. Update `MARKETING_VERSION` (and build
+   number) in `project.yml`. 3. Update `CHANGELOG.md`. 4. Run checks / rely on
+   CI. 5. Commit. 6. Tag `vX.Y.Z`. 7. Push commits + tag.
 
 ```bash
 git tag v0.2.0
@@ -892,353 +345,66 @@ git push
 git push origin v0.2.0
 ```
 
-Tag format:
+---
 
-```txt
-vX.Y.Z
-```
+# 22. Delivery Plan (build order, from the blueprint)
 
-Examples:
+1. **Foundation** — project bootstrap, design system, navigation shell, privacy
+   shield. ✅ `0.18.0`
+2. **Auth** — Sign in with Apple + Google, backend validation, provisioning.
+3. **Clients + Projects** — cloud CRUD, search, premium list UX.
+4. **Payments** — invoices/partials/overdue, reminders.
+5. **Vault** — Argon2id KDF, key hierarchy, ciphertext sync, reveal sheet,
+   biometric unlock.
+6. **Settings + Plan** — entitlements scaffolding (server validation seam).
+7. **Push** — APNs registration + optional cross-device pushes.
 
-```txt
-v0.1.0
-v0.2.0
-v1.0.0
-```
+Version milestones: [`docs/version-milestones.md`](docs/version-milestones.md).
 
 ---
 
-# 23. Version Milestone Plan
-
-Suggested MVP version plan:
-
-## 0.1.0 — Project Foundation
-
-Includes:
-
-- Flutter project setup
-- Material 3 theme
-- folder structure
-- bottom tab shell
-- go_router setup
-- Riverpod setup
-- base shared widgets
-- README and changelog
-
----
-
-## 0.2.0 — Local Database Foundation
-
-Includes:
-
-- Drift setup
-- SQLite setup
-- first migrations
-- Client model
-- Project model
-- repository structure
-- sample CRUD flow
-
----
-
-## 0.3.0 — Clients and Projects
-
-Includes:
-
-- Clients list
-- Client detail
-- Create/edit client
-- Projects list
-- Project detail
-- Create/edit project
-- Link projects to clients
-
----
-
-## 0.4.0 — Payments
-
-Includes:
-
-- Payment model
-- Create/edit payment
-- Payment statuses
-- Project payment rollups
-- Dashboard totals
-
----
-
-## 0.5.0 — Vault Foundation
-
-Includes:
-
-- Master password setup
-- Vault lock screen
-- encrypted VaultItem model
-- crypto service
-- reveal/copy secret flow
-- clipboard auto-clear
-
----
-
-## 0.6.0 — Biometrics and Security Polish
-
-Includes:
-
-- Face ID / Touch ID / fingerprint unlock
-- auto-lock
-- screenshot protection
-- secure storage integration
-- change master password flow
-
----
-
-## 0.7.0 — GitHub Integration
-
-Includes:
-
-- GitHub OAuth
-- secure token storage
-- repo browser
-- link repo to project
-- project repo status card
-
----
-
-## 0.8.0 — Backup, Settings, and Polish
-
-Includes:
-
-- encrypted export/import
-- settings screen
-- lock timeout setting
-- theme polish
-- animations
-- haptics
-- empty/loading/error states
-
----
-
-## 0.9.0 — TestFlight Candidate
-
-Includes:
-
-- app icon
-- splash screen
-- iOS signing
-- GitHub Actions release workflow
-- TestFlight upload
-- privacy-safe settings
-- legal/support links
-- no broken debug UI
-
----
-
-## 1.0.0 — MVP App Store Candidate
-
-Includes:
-
-- stable MVP
-- all critical modules working
-- clean UI
-- critical bugs fixed
-- ready for external testing
-- ready for App Store preparation
-
----
-
-# 24. Pull Request Rules
-
-If working with pull requests, use this PR format:
+# 23. Pull Request Format
 
 ```md
 ## Summary
-
-Briefly explain what changed.
-
 ## Version
-
-Example: 0.3.0
-
-## Changes
-
-- Added ...
-- Changed ...
-- Fixed ...
-
-## Testing
-
-- Ran `flutter analyze`
-- Ran `flutter test`
-- Tested navigation manually
-
-## Screenshots / Videos
-
-Attach if UI changed.
-
+## Changes (Added/Changed/Fixed)
+## Testing (xcodebuild test / CI green)
+## Screenshots / Videos (if UI changed)
 ## Notes
-
-Mention anything important for review.
 ```
 
 ---
 
-# 25. README Requirements
+# 24. Documentation
 
-The repository should include a clear `README.md`.
-
-README should contain:
-
-- project name
-- short description
-- tech stack
-- setup instructions
-- run instructions
-- folder structure summary
-- versioning rules
-- development workflow
-- TestFlight notes
-- security notes
-
----
-
-# 26. Documentation Rules
-
-Keep documentation inside:
+Keep docs in `docs/`:
 
 ```txt
-docs/
+docs/rewrite-blueprint.md     # single source of truth (mirrors the Notion spec)
+docs/architecture-swiftui.md  # app architecture, DI, state, navigation
+docs/security-model.md        # zero-knowledge vault crypto + threat model
+docs/backend-amplify.md       # AWS Amplify Gen 2 backend design + endpoints
+docs/version-milestones.md    # phase → version plan
 ```
 
-Recommended files:
-
-```txt
-docs/clientvault-prd-mvp.md
-docs/flutter-architecture.md
-docs/security-model.md
-docs/database-schema.md
-docs/versioning.md
-docs/release-checklist.md
-docs/app-store-prep.md
-docs/testflight-pipeline.md
-```
-
-When major systems are added, document them.
-
-Examples:
-
-- vault encryption system
-- local database schema
-- GitHub integration
-- iOS signing pipeline
-- backup/export system
+Document major systems when added (vault crypto, backend schema, push, signing).
 
 ---
 
-# 27. Code Quality Rules
+# 25. Code Quality
 
-Claude must keep the code:
+Readable, typed, modular, testable, secure. Avoid huge files, duplicated logic,
+magic numbers (use `Spacing`/`Radius`/`Motion` tokens), unclear names, dead code,
+business logic in views, unnecessary dependencies.
 
-- readable
-- typed
-- modular
-- scalable
-- secure
-- testable
-- easy to debug
-
-Avoid:
-
-- huge files
-- duplicated logic
-- random magic numbers
-- unclear names
-- dead code
-- commented-out broken code
-- unnecessary dependencies
-- business logic inside widgets
-
-Use constants for important values.
-
-Use typed models for app data.
-
-Prefer small, focused widgets.
+Add tests for crypto primitives, key handling, and DTO ↔ domain mapping.
 
 ---
 
-# 28. Local Data Safety
+# 26. Final Instruction
 
-Because this app may store important work and vault data, local data must be handled carefully.
-
-Rules:
-
-- never break old database data without migration
-- include database schema versioning
-- add migration logic when schema changes
-- do not delete user data unless user chooses delete data
-- keep encrypted backups compatible where possible
-- document breaking changes clearly
-
----
-
-# 29. App Store Safety Rules
-
-Before preparing TestFlight or App Store builds:
-
-- remove unfinished debug UI
-- avoid unused permissions
-- avoid private APIs
-- add privacy policy link
-- add support contact
-- add terms/legal links if needed
-- make sure the app does not crash
-- make sure buttons work
-- make sure placeholder features are not misleading
-- complete export compliance honestly
-- increase iOS build number before upload
-
----
-
-# 30. What Claude Should Report After Each Version
-
-After finishing a version, Claude should report:
-
-```md
-## Version Completed: x.y.z
-
-### Summary
-Short summary of what was added or fixed.
-
-### Commits
-- commit hash/message if available
-
-### Changelog
-Mention that CHANGELOG.md was updated.
-
-### Tests
-Mention what checks were run.
-
-### GitHub
-Mention whether changes were pushed.
-
-### Next Recommended Version
-Suggest the next logical version.
-```
-
----
-
-# 31. Important Final Instruction
-
-Claude should behave like a senior Flutter engineer, not just a code generator.
-
-For every update:
-
-- think about maintainability
-- protect the project from messy code
-- protect user data
-- keep versions clean
-- update changelog
-- commit properly
-- push to GitHub
-- explain clearly what changed
-
-The goal is to build a real Flutter mobile app that can eventually be launched on TestFlight, the App Store, and Google Play.
+Behave like a senior iOS engineer, not a code generator. For every update: think
+about maintainability, protect user data, keep versions clean, update the
+changelog, commit properly, push when appropriate, and explain clearly. The goal
+is a real iPhone app shippable to TestFlight and the App Store.
