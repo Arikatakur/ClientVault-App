@@ -13,6 +13,42 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (now under
 > [`legacy/flutter/`](legacy/flutter/)).
 
+## [0.19.0] - 2026-06-11
+
+**Authentication — Phase 2.** Sign in with Apple + Google, session persistence,
+and account deletion. Backend token validation is a seam (the Amplify backend
+isn't provisioned yet); a dev fallback signs in locally so the flow works end to end.
+
+### Added
+- **Sign in with Apple** via the official `SignInWithAppleButton`, with a secure
+  random nonce (SHA-256 in the request) for replay protection.
+- **Sign in with Google** via the GoogleSignIn SDK (added as an SPM package, guarded
+  with `canImport` so the app still builds if the package is absent).
+- **`AuthService`** orchestrating provider sign-in → backend token exchange
+  (`POST /auth/{provider}`) → session, with a local **dev fallback** while
+  `AppConfig.hasBackend` is false.
+- **Session persistence**: the session restores on cold launch; sign-out and
+  account deletion clear it. `SessionStore` now tracks the signed-in `UserProfile`.
+- **Account deletion** in Settings (Apple requirement) with a confirmation dialog,
+  plus the signed-in email shown in the Account section.
+
+### Security
+- Refresh token stored in the Keychain; access token kept in memory only.
+- Apple authorization parsed off the async path so the non-`Sendable`
+  `ASAuthorization` is never sent across an actor boundary.
+- The Google client id is read from `Info.plist` (`GIDClientID`); a committed
+  `PLACEHOLDER` is treated as "not configured" and the button errors gracefully.
+
+### Changed
+- The app now starts at the sign-in screen (`SessionStore` defaults to
+  unauthenticated) and `restore()` promotes it when a session exists.
+- Bumped to `0.19.0+21`.
+
+### Internal
+- Auth unit tests: nonce length/uniqueness + a known SHA-256 vector, dev-fallback
+  and backend exchange paths (with fakes), API-error wrapping, session restore, and
+  sign-out clearing.
+
 ## [0.18.0] - 2026-06-11
 
 **Native rewrite — Phase 1 foundation (SwiftUI + cloud).** The first slice of the

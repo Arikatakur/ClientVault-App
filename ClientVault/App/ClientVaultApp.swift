@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(GoogleSignIn)
+import GoogleSignIn
+#endif
 
 @main
 struct ClientVaultApp: App {
@@ -30,6 +33,15 @@ struct ClientVaultApp: App {
                     if newPhase == .background {
                         environment.session.onEnteredBackground()
                     }
+                }
+                .task {
+                    // Restore an existing session on cold launch.
+                    await environment.auth.restore()
+                }
+                .onOpenURL { url in
+                    #if canImport(GoogleSignIn)
+                    GIDSignIn.sharedInstance.handle(url)
+                    #endif
                 }
         }
     }
