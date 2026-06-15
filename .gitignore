@@ -64,3 +64,13 @@ legacy/flutter/build/
 legacy/flutter/.dart_tool/
 legacy/flutter/.flutter-plugins-dependencies
 legacy/flutter/ios/Flutter/.last_build_id
+
+# Root-level Flutter leftovers from the archived app. The active app is native
+# SwiftUI; Flutter source that still matters lives under legacy/flutter/.
+/.dart_tool/
+/.flutter-plugins-dependencies
+/android/
+/ios/
+
+# Local assistant/tool settings
+/.claude/settings.local.json
