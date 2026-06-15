@@ -19,6 +19,8 @@ final class AppEnvironment {
     let api: APIClient
     let push: PushRegistering
     let notifications: LocalNotificationScheduling
+    let clientsVM: ClientsViewModel
+    let projectsVM: ProjectsViewModel
 
     init(
         config: AppConfig,
@@ -30,7 +32,9 @@ final class AppEnvironment {
         crypto: CryptoService,
         api: APIClient,
         push: PushRegistering,
-        notifications: LocalNotificationScheduling
+        notifications: LocalNotificationScheduling,
+        clientsVM: ClientsViewModel,
+        projectsVM: ProjectsViewModel
     ) {
         self.config = config
         self.session = session
@@ -42,9 +46,12 @@ final class AppEnvironment {
         self.api = api
         self.push = push
         self.notifications = notifications
+        self.clientsVM = clientsVM
+        self.projectsVM = projectsVM
     }
 
     /// Wires the production implementations together.
+    @MainActor
     static func live() -> AppEnvironment {
         let config = AppConfig.current
         let keychain = KeychainStore(service: config.keychainService)
@@ -52,6 +59,13 @@ final class AppEnvironment {
         let api = URLSessionAPIClient(baseURL: config.apiBaseURL, tokenProvider: tokenStore)
         let session = SessionStore(tokenStore: tokenStore)
         let auth = LiveAuthService(api: api, tokenStore: tokenStore, session: session, config: config)
+
+        let clientRepo: ClientRepositing = config.hasBackend
+            ? LiveClientRepository(api: api)
+            : InMemoryClientRepository()
+        let projectRepo: ProjectRepositing = config.hasBackend
+            ? LiveProjectRepository(api: api)
+            : InMemoryProjectRepository()
 
         return AppEnvironment(
             config: config,
@@ -63,7 +77,9 @@ final class AppEnvironment {
             crypto: AESGCMCrypto(),
             api: api,
             push: PushRegistrar(),
-            notifications: LocalNotificationScheduler()
+            notifications: LocalNotificationScheduler(),
+            clientsVM: ClientsViewModel(repo: clientRepo),
+            projectsVM: ProjectsViewModel(repo: projectRepo)
         )
     }
 }

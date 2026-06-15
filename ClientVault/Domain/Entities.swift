@@ -4,7 +4,7 @@ import Foundation
 /// storage. All carry `id`/`createdAt`/`updatedAt` and a soft-delete marker for
 /// safe sync. IDs are UUIDs minted client-side so creates are idempotent.
 
-struct Client: Identifiable, Equatable {
+struct Client: Identifiable, Equatable, Hashable {
     let id: UUID
     var name: String
     var company: String?
@@ -29,7 +29,7 @@ enum ProjectStatus: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-struct Project: Identifiable, Equatable {
+struct Project: Identifiable, Equatable, Hashable {
     let id: UUID
     var clientId: UUID?
     var name: String

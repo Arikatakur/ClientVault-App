@@ -13,6 +13,46 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (now under
 > [`legacy/flutter/`](legacy/flutter/)).
 
+## [0.20.0] - 2026-06-16
+
+**Clients + Projects — Phase 3.** Full cloud-first CRUD for both modules, with
+premium list UX, search, and cross-linking. The backend endpoints are wired but
+remain a seam (`AppConfig.hasBackend = false`); an in-memory dev store stands in
+so every flow is exercisable without a provisioned backend. Data resets on cold
+launch in dev mode — the live backend will persist it.
+
+### Added
+- **Clients list** with `.searchable` (name or company), swipe-to-delete, context
+  menu (Edit / Delete), row insertion/deletion animations, and haptics.
+- **Client detail screen** — contact info (company, email, phone, notes), plus a
+  linked projects section showing every project tied to the client.
+- **Add/edit client form** — name (required), company, email, phone, notes; input
+  validation and a clear required-field indicator.
+- **Projects list** with status filter chips (All / Lead / Active / Paused / Done),
+  `.searchable` (project name or linked client name), swipe-to-delete, context
+  menu, due-date label (turns red when overdue), and list animations.
+- **Project detail screen** — status chip, linked client, due date, summary, and
+  optional GitHub repo reference.
+- **Add/edit project form** — name (required), client picker, status picker, due-
+  date toggle with `DatePicker`, summary, GitHub repo field.
+- **Clients ↔ Projects linking** — projects can be linked to a client; client
+  detail shows linked projects with tappable rows that push `ProjectDetailView`
+  within the same navigation stack.
+- **`ClientRepository` / `ProjectRepository`** protocols with `InMemory` (dev) and
+  `Live` (backend seam) implementations. Repos are wired in `AppEnvironment.live()`
+  via `AppConfig.hasBackend`.
+- **`ClientsViewModel` / `ProjectsViewModel`** (`@Observable`) — hold list state,
+  loading/error/empty, search filter, and expose CRUD operations.
+- **`ProjectStatusChip`** reusable badge (Lead / Active / Paused / Done with tinted
+  capsule) shared between the list rows and detail screens.
+- Unit tests for both in-memory repositories: create, list, soft-delete exclusion,
+  update, delete, sort by `createdAt`, and project-by-client filtering.
+
+### Changed
+- `AppEnvironment` now holds `clientsVM` and `projectsVM`; `AppEnvironment.live()`
+  picks the correct repo implementation based on `AppConfig.hasBackend`.
+- Bumped to `0.20.0+22`.
+
 ## [0.19.0] - 2026-06-11
 
 **Authentication — Phase 2.** Sign in with Apple + Google, session persistence,
