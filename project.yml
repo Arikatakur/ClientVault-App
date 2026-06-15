@@ -10,7 +10,7 @@
 name: ClientVault
 
 options:
-  bundleIdPrefix: com.clientvault
+  bundleIdPrefix: org.clientvault
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
@@ -52,7 +52,7 @@ targets:
     settings:
       base:
         PRODUCT_NAME: ClientVault
-        PRODUCT_BUNDLE_IDENTIFIER: com.clientvault.app   # MUST match App Store Connect.
+        PRODUCT_BUNDLE_IDENTIFIER: org.clientvault.app   # MUST match App Store Connect.
         INFOPLIST_FILE: ClientVault/Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: ClientVault/Resources/ClientVault.entitlements
         GENERATE_INFOPLIST_FILE: NO
@@ -71,7 +71,7 @@ targets:
       - path: ClientVaultTests
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.clientvault.app.tests
+        PRODUCT_BUNDLE_IDENTIFIER: org.clientvault.app.tests
         GENERATE_INFOPLIST_FILE: YES
     dependencies:
       - target: ClientVault

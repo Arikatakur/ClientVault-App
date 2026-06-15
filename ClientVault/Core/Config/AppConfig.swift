@@ -41,7 +41,7 @@ struct AppConfig {
         return AppConfig(
             environment: env,
             apiBaseURL: baseURL,
-            keychainService: "com.clientvault.app",
+            keychainService: "org.clientvault.app",
             // Flip to true once the Amplify backend + auth endpoints exist.
             hasBackend: false,
             googleClientID: googleClientID
