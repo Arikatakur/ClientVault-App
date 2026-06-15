@@ -20,10 +20,10 @@ options:
 
 settings:
   base:
-    MARKETING_VERSION: "0.20.0"         # ← user-facing app version (semver). Single source of truth.
+    MARKETING_VERSION: "0.21.0"         # ← user-facing app version (semver). Single source of truth.
                                         #    Continues the line past the Flutter app's 0.17.0 — App Store
                                         #    Connect rejects a version that isn't greater than a prior upload.
-    CURRENT_PROJECT_VERSION: "22"       # ← build number; must exceed the highest previously uploaded build
+    CURRENT_PROJECT_VERSION: "23"       # ← build number; must exceed the highest previously uploaded build
                                         #    (the Flutter app reached 0.17.0+19) and increase every upload.
     SWIFT_VERSION: "5.10"
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"

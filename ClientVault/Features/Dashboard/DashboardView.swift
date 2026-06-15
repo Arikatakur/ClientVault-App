@@ -1,9 +1,12 @@
 import SwiftUI
 
-/// Dashboard — at-a-glance rollups. Tiles show placeholders until cloud CRUD
-/// lands (the Clients/Projects/Payments phase); the layout and motion are real.
 struct DashboardView: View {
+    @Environment(AppEnvironment.self) private var env
     @Environment(EntitlementStore.self) private var entitlements
+
+    private var clientsVM: ClientsViewModel { env.clientsVM }
+    private var projectsVM: ProjectsViewModel { env.projectsVM }
+    private var paymentsVM: PaymentsViewModel { env.paymentsVM }
 
     private let columns = [GridItem(.flexible(), spacing: Spacing.md),
                            GridItem(.flexible(), spacing: Spacing.md)]
@@ -12,10 +15,30 @@ struct DashboardView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.lg) {
                 LazyVGrid(columns: columns, spacing: Spacing.md) {
-                    StatTile(title: "Clients", value: "—", icon: "person.2", tint: Palette.accent)
-                    StatTile(title: "Projects", value: "—", icon: "folder", tint: Palette.info)
-                    StatTile(title: "Outstanding", value: "—", icon: "creditcard", tint: Palette.warning)
-                    StatTile(title: "Vault items", value: "—", icon: "lock.shield", tint: Palette.vault)
+                    StatTile(
+                        title: "Clients",
+                        value: "\(clientsVM.clients.count)",
+                        icon: "person.2",
+                        tint: Palette.accent
+                    )
+                    StatTile(
+                        title: "Projects",
+                        value: "\(projectsVM.projects.filter { $0.deletedAt == nil }.count)",
+                        icon: "folder",
+                        tint: Palette.info
+                    )
+                    StatTile(
+                        title: "Outstanding",
+                        value: "\(paymentsVM.outstandingCount)",
+                        icon: "creditcard",
+                        tint: Palette.warning
+                    )
+                    StatTile(
+                        title: "Vault items",
+                        value: "—",
+                        icon: "lock.shield",
+                        tint: Palette.vault
+                    )
                 }
 
                 CardContainer {
@@ -34,6 +57,9 @@ struct DashboardView: View {
         .background(Palette.background)
         .navigationTitle("Dashboard")
         .toolbarBackground(Palette.background, for: .navigationBar)
+        .task { await clientsVM.load() }
+        .task { await projectsVM.load() }
+        .task { await paymentsVM.load() }
     }
 }
 

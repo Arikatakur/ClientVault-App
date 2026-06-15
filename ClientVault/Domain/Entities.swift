@@ -45,6 +45,14 @@ struct Project: Identifiable, Equatable, Hashable {
 enum PaymentStatus: String, Codable, CaseIterable, Identifiable {
     case pending, partial, paid, overdue
     var id: String { rawValue }
+    var displayName: String {
+        switch self {
+        case .pending: return "Pending"
+        case .partial: return "Partial"
+        case .paid:    return "Paid"
+        case .overdue: return "Overdue"
+        }
+    }
 }
 
 struct Payment: Identifiable, Equatable {

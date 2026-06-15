@@ -7,6 +7,7 @@ struct ProjectsView: View {
 
     private var vm: ProjectsViewModel { env.projectsVM }
     private var clientsVM: ClientsViewModel { env.clientsVM }
+    private var paymentsVM: PaymentsViewModel { env.paymentsVM }
 
     var body: some View {
         @Bindable var vm = vm
@@ -137,7 +138,7 @@ struct ProjectsView: View {
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
         .navigationDestination(for: Project.self) { project in
-            ProjectDetailView(projectId: project.id, vm: vm, clientsVM: clientsVM)
+            ProjectDetailView(projectId: project.id, vm: vm, clientsVM: clientsVM, paymentsVM: paymentsVM)
         }
     }
 }

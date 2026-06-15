@@ -13,6 +13,40 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (now under
 > [`legacy/flutter/`](legacy/flutter/)).
 
+## [0.21.0] - 2026-06-16
+
+**Payments — Phase 4.** Per-project payment tracking with status badges, rollup
+totals (invoiced / paid / outstanding), and a live dashboard count. Backend
+endpoint seams wired; in-memory dev store stands in for pre-backend development.
+
+### Added
+- **PaymentRepository** — protocol + `InMemoryPaymentRepository` + `LivePaymentRepository`
+  with both `list()` (global, for dashboard) and `list(projectId:)` (per-project).
+- **PaymentsViewModel** (`@MainActor @Observable`) — single shared VM; `payments(for: projectId)`
+  computed filter; `formattedTotal(for:)` rollup (invoiced / paid / outstanding);
+  `outstandingCount` for the dashboard tile; `isOverdue` computed on `Payment`
+  (derived from due date, never stored — can't go stale).
+- **Payments section in ProjectDetailView** — rollup card (invoiced / paid / outstanding),
+  per-payment rows with amount, due date, note, and `PaymentStatusBadge`; context
+  menu (Edit / Delete); tap to edit.
+- **Add/edit payment form** — amount (parsed via `Decimal`, never `Double`),
+  ISO 4217 currency code, status Picker (pending / partial / paid only — overdue
+  is derived, never written by the app), optional due date, optional paid date
+  (shown when status = paid), optional note.
+- **`PaymentStatusBadge`** — reusable pill showing computed overdue state (red)
+  over stored status; mirrors `ProjectStatusChip` style.
+- **Dashboard live counts** — Clients, Projects, and Outstanding tiles now show
+  real counts from the shared VMs; Vault items tile remains a placeholder.
+- **Tests** — `PaymentViewModelTests`: CRUD, `list(projectId:)`, `isOverdue`
+  (overdue / paid / future-due / no-due-date), and outstanding-count rollup.
+
+### Internal
+- `PaymentStatus.displayName` added to the `PaymentStatus` enum.
+- `AppEnvironment` wired with `paymentsVM` (InMemory dev fallback / Live seam).
+- `DashboardView` pulls live counts from `AppEnvironment` via `@Environment`.
+
+---
+
 ## [0.20.0] - 2026-06-16
 
 **Clients + Projects — Phase 3.** Full cloud-first CRUD for both modules, with

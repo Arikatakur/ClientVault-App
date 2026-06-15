@@ -106,7 +106,7 @@ struct ClientsView: View {
             ClientDetailView(clientId: client.id, vm: vm)
         }
         .navigationDestination(for: Project.self) { project in
-            ProjectDetailView(projectId: project.id, vm: env.projectsVM, clientsVM: vm)
+            ProjectDetailView(projectId: project.id, vm: env.projectsVM, clientsVM: vm, paymentsVM: env.paymentsVM)
         }
     }
 }

@@ -21,6 +21,7 @@ final class AppEnvironment {
     let notifications: LocalNotificationScheduling
     let clientsVM: ClientsViewModel
     let projectsVM: ProjectsViewModel
+    let paymentsVM: PaymentsViewModel
 
     init(
         config: AppConfig,
@@ -34,7 +35,8 @@ final class AppEnvironment {
         push: PushRegistering,
         notifications: LocalNotificationScheduling,
         clientsVM: ClientsViewModel,
-        projectsVM: ProjectsViewModel
+        projectsVM: ProjectsViewModel,
+        paymentsVM: PaymentsViewModel
     ) {
         self.config = config
         self.session = session
@@ -48,6 +50,7 @@ final class AppEnvironment {
         self.notifications = notifications
         self.clientsVM = clientsVM
         self.projectsVM = projectsVM
+        self.paymentsVM = paymentsVM
     }
 
     /// Wires the production implementations together.
@@ -66,6 +69,9 @@ final class AppEnvironment {
         let projectRepo: ProjectRepositing = config.hasBackend
             ? LiveProjectRepository(api: api)
             : InMemoryProjectRepository()
+        let paymentRepo: PaymentRepositing = config.hasBackend
+            ? LivePaymentRepository(api: api)
+            : InMemoryPaymentRepository()
 
         return AppEnvironment(
             config: config,
@@ -79,7 +85,8 @@ final class AppEnvironment {
             push: PushRegistrar(),
             notifications: LocalNotificationScheduler(),
             clientsVM: ClientsViewModel(repo: clientRepo),
-            projectsVM: ProjectsViewModel(repo: projectRepo)
+            projectsVM: ProjectsViewModel(repo: projectRepo),
+            paymentsVM: PaymentsViewModel(repo: paymentRepo)
         )
     }
 }
