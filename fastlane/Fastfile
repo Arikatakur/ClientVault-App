@@ -4,8 +4,13 @@ default_platform(:ios)
 
 platform :ios do
   desc "Build and upload ClientVault to TestFlight"
-  lane :testflight do
+  lane :beta do
     setup_ci
+
+    repo_root = File.expand_path("..", __dir__)
+    project_path = File.join(repo_root, "ClientVault.xcodeproj")
+    output_directory = File.join(repo_root, "build/ios")
+    ipa_path = File.join(output_directory, "ClientVault.ipa")
 
     key_content =
       if ENV["APP_STORE_CONNECT_API_KEY_BASE64"].to_s.length.positive?
@@ -21,7 +26,9 @@ platform :ios do
       is_key_content_base64: false
     )
 
-    sh("xcodegen generate")
+    Dir.chdir(repo_root) do
+      sh("xcodegen generate")
+    end
 
     match(
       type: "appstore",
@@ -31,26 +38,26 @@ platform :ios do
 
     update_code_signing_settings(
       use_automatic_signing: false,
-      path: "ClientVault.xcodeproj",
+      path: project_path,
       team_id: ENV.fetch("APPLE_TEAM_ID"),
       profile_name: "match AppStore org.clientvault.app",
       targets: ["ClientVault"]
     )
 
     build_app(
-      project: "ClientVault.xcodeproj",
+      project: project_path,
       scheme: "ClientVault",
       configuration: "Release",
       export_method: "app-store",
       clean: true,
-      output_directory: "build/ios",
+      output_directory: output_directory,
       output_name: "ClientVault.ipa",
       xcargs: "DEVELOPMENT_TEAM=#{ENV.fetch('APPLE_TEAM_ID')}"
     )
 
     upload_to_testflight(
       api_key: api_key,
-      ipa: "build/ios/ClientVault.ipa",
+      ipa: ipa_path,
       skip_waiting_for_build_processing: true
     )
   end

@@ -38,4 +38,4 @@ jobs:
           bundler-cache: true
 
       - name: Upload to TestFlight
-        run: bundle exec fastlane ios testflight
+        run: bundle exec fastlane ios beta
