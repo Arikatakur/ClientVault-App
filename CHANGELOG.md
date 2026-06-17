@@ -13,6 +13,51 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (preserved
 > in git history; no longer in the working tree).
 
+## [0.24.0] - 2026-06-17
+
+**Push + GitHub OAuth — Phase 7.** APNs registration with proper permission request,
+GitHub OAuth connect/disconnect via `ASWebAuthenticationSession`, and a new Integrations
+section in Settings wired to both.
+
+### Added
+- **`AppDelegate`** — minimal `UIApplicationDelegate` (added via
+  `@UIApplicationDelegateAdaptor`) for receiving APNs device-token callbacks; forwards
+  the token to `PushRegistrar` via an async `onDeviceToken` closure wired on first launch.
+- **`PushRegistrar`** rewritten as `@MainActor @Observable` — tracks
+  `authorizationStatus: UNAuthorizationStatus`; `requestAuthorizationAndRegister()` calls
+  `UNUserNotificationCenter.requestAuthorization()` then
+  `UIApplication.registerForRemoteNotifications()` on grant; `checkStatus()` refreshes on
+  every foreground return. Device-token upload is a backend seam (TODO).
+- **`GitHubService`** — `GitHubServicing` protocol (code-exchange half only;
+  client_secret stays server-side) + `DevGitHubService` (returns `dev-user` immediately) +
+  `LiveGitHubService` (backend seam; throws until exchange endpoint is provisioned).
+- **`GitHubOAuthCoordinator`** — `@unchecked Sendable NSObject` managing
+  `ASWebAuthenticationSession` lifetime; `presentationAnchor` uses
+  `MainActor.assumeIsolated` to safely access `UIApplication.shared` from the non-isolated
+  delegate method.
+- **`GitHubStore`** — `@MainActor @Observable` store for connection state; `connect()`
+  runs the full OAuth + code-exchange flow in live builds or the dev mock immediately;
+  `disconnect()` clears Keychain; `login` and `name` persisted across launches.
+- **Settings → Integrations section** — push-notification permission row (shows status,
+  enable button, or "Open Settings" link if denied); GitHub connect/disconnect row with
+  username display and in-progress indicator.
+- **`AppConfig.gitHubClientID`** — reads `GitHubClientID` from `Info.plist`; treats
+  empty or placeholder values as nil.
+- **`Info.plist`** — added `clientvault://` URL scheme for the OAuth callback; added
+  `GitHubClientID` placeholder key.
+
+### Changed
+- `AppEnvironment.push` is now the concrete `PushRegistrar` (was `PushRegistering`
+  protocol), enabling `authorizationStatus` observation in views.
+- `AppEnvironment` gains `githubStore: GitHubStore`.
+- `PushRegistering` protocol removed (only one implementation; no test replacements).
+- `ClientVaultApp` refreshes push authorization status on every active foreground return.
+
+### Internal
+- Push `aps-environment` entitlement intentionally **not added**: requires the App ID Push
+  Notifications capability and Match provisioning profile update before a TestFlight build
+  will sign correctly. Add when APNs is provisioned server-side.
+
 ## [0.23.0] - 2026-06-17
 
 **Settings + Plan — Phase 6.** StoreKit 2 entitlement scaffolding, a Pro upgrade

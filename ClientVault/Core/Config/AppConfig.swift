@@ -20,6 +20,10 @@ struct AppConfig {
     /// in the Google Cloud console; the Google button errors gracefully without it.
     let googleClientID: String?
 
+    /// GitHub OAuth app client id (from `GitHubClientID` in Info.plist). Not a secret —
+    /// ships in the bundle. Nil when not configured; the connect button errors gracefully.
+    let gitHubClientID: String?
+
     /// The active configuration. The API base URL is a placeholder until the
     /// AWS Amplify Gen 2 backend is provisioned (see docs/backend-amplify.md);
     /// it is read from Info.plist (`API_BASE_URL`) when present so each build
@@ -34,9 +38,10 @@ struct AppConfig {
         let env: Environment = .production
         #endif
         let info = Bundle.main.infoDictionary
-        let googleClientID = (info?["GIDClientID"] as? String).flatMap { value in
-            // Treat the committed placeholder as "not configured".
-            value.contains("PLACEHOLDER") || value.isEmpty ? nil : value
+        func nonPlaceholder(_ key: String) -> String? {
+            (info?[key] as? String).flatMap { value in
+                value.isEmpty || value.contains("PLACEHOLDER") ? nil : value
+            }
         }
         return AppConfig(
             environment: env,
@@ -44,7 +49,8 @@ struct AppConfig {
             keychainService: "org.clientvault.app",
             // Flip to true once the Amplify backend + auth endpoints exist.
             hasBackend: false,
-            googleClientID: googleClientID
+            googleClientID: nonPlaceholder("GIDClientID"),
+            gitHubClientID: nonPlaceholder("GitHubClientID")
         )
     }()
 }

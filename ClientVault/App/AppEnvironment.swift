@@ -17,8 +17,9 @@ final class AppEnvironment {
     let keychain: KeychainStoring
     let crypto: CryptoService
     let api: APIClient
-    let push: PushRegistering
+    let push: PushRegistrar
     let notifications: LocalNotificationScheduling
+    let githubStore: GitHubStore
     let clientsVM: ClientsViewModel
     let projectsVM: ProjectsViewModel
     let paymentsVM: PaymentsViewModel
@@ -33,8 +34,9 @@ final class AppEnvironment {
         keychain: KeychainStoring,
         crypto: CryptoService,
         api: APIClient,
-        push: PushRegistering,
+        push: PushRegistrar,
         notifications: LocalNotificationScheduling,
+        githubStore: GitHubStore,
         clientsVM: ClientsViewModel,
         projectsVM: ProjectsViewModel,
         paymentsVM: PaymentsViewModel,
@@ -50,6 +52,7 @@ final class AppEnvironment {
         self.api = api
         self.push = push
         self.notifications = notifications
+        self.githubStore = githubStore
         self.clientsVM = clientsVM
         self.projectsVM = projectsVM
         self.paymentsVM = paymentsVM
@@ -83,6 +86,15 @@ final class AppEnvironment {
         let storeKit: StoreKitServicing = config.hasBackend
             ? LiveStoreKitService()
             : DevStoreKitService()
+        let github: GitHubServicing = config.hasBackend
+            ? LiveGitHubService(api: api)
+            : DevGitHubService()
+        let githubStore = GitHubStore(
+            service: github,
+            keychain: keychain,
+            clientID: config.gitHubClientID,
+            hasBackend: config.hasBackend
+        )
 
         return AppEnvironment(
             config: config,
@@ -95,6 +107,7 @@ final class AppEnvironment {
             api: api,
             push: PushRegistrar(),
             notifications: LocalNotificationScheduler(),
+            githubStore: githubStore,
             clientsVM: ClientsViewModel(repo: clientRepo),
             projectsVM: ProjectsViewModel(repo: projectRepo),
             paymentsVM: PaymentsViewModel(repo: paymentRepo),

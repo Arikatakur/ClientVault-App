@@ -64,12 +64,27 @@
 	     reversed client id, used to receive the OAuth callback. See docs/auth.md. -->
 	<key>GIDClientID</key>
 	<string>9238254790-t5ut5h8pmcfpq1hpuontrhns2q9tviel.apps.googleusercontent.com</string>
+
+	<!-- GitHub OAuth app client id (not a secret — ships in the bundle).
+	     Replace PLACEHOLDER with the real client_id from github.com/settings/developers
+	     when the GitHub OAuth App is registered. Client-secret stays server-side. -->
+	<key>GitHubClientID</key>
+	<string>PLACEHOLDER_GITHUB_CLIENT_ID</string>
+
 	<key>CFBundleURLTypes</key>
 	<array>
+		<!-- Google Sign-In callback scheme (reversed client id). -->
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>com.googleusercontent.apps.9238254790-t5ut5h8pmcfpq1hpuontrhns2q9tviel</string>
+			</array>
+		</dict>
+		<!-- GitHub OAuth callback scheme. -->
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>clientvault</string>
 			</array>
 		</dict>
 	</array>

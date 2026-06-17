@@ -4,8 +4,8 @@
 > payments, and a zero-knowledge encrypted vault** — built with **SwiftUI** on a
 > **cloud backend**, with an Apple-quality dark UI.
 
-**Status:** `v0.23.0` — Phase 6 (Settings + Entitlements): StoreKit 2 paywall ·
-interval auto-lock · biometric toggle wired to vault state.
+**Status:** `v0.24.0` — Phase 7 (Push + GitHub OAuth): APNs registration ·
+GitHub OAuth connect via `ASWebAuthenticationSession` · Settings Integrations section.
 
 > **This is a rewrite.** ClientVault began as a local-first Flutter app (through
 > `v0.17.0`). It has been rebuilt as a native SwiftUI + cloud app following

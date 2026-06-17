@@ -17,7 +17,7 @@ rewrite's foundation is `0.18.0` and minor bumps continue from there. (Build num
 | `0.22.0` | 5 — Vault | Argon2id (vetted dep), full key hierarchy, ciphertext sync, lazy reveal sheet (blur→clear), biometric unlock, clipboard auto-clear | ✅ done |
 | `0.22.1` | 5 — Vault patch | Biometric Keychain read moved off `@MainActor` (`Task.detached`) so Face ID prompt doesn't block UI thread | ✅ done |
 | `0.23.0` | 6 — Settings + Plan | Entitlements UX gate + StoreKit, server-validation webhook seam, auto-lock/biometric settings wired | ✅ done |
-| `0.24.0` | 7 — Push | APNs registration upload, optional cross-device pushes, repo-activity (optional) | |
+| `0.24.0` | 7 — Push + GitHub OAuth | APNs permission + registration, `AppDelegate` token callback, GitHub OAuth (ASWebAuthenticationSession), Settings Integrations section | ✅ done |
 | `0.25.0`+ | Polish | error UX states, animations, haptics, empty/loading states, backup/export | |
 | `0.26.0` | TestFlight candidate | app icon, splash, signing (Fastlane Match), `release-ios.yml` (tag `v*`), legal/support links | |
 | `1.0.0` | MVP | stable MVP, all critical modules, App Store-ready | |

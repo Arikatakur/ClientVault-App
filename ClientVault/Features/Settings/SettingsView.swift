@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 
 struct SettingsView: View {
     @Environment(AppEnvironment.self) private var env
@@ -62,6 +63,8 @@ struct SettingsView: View {
                 }
             }
 
+            integrationsSection
+
             Section("About") {
                 LabeledContent("Version", value: Self.versionString)
                 Link("Privacy Policy", destination: URL(string: "https://clientvault.app/privacy")!)
@@ -83,6 +86,68 @@ struct SettingsView: View {
         }
         .sheet(isPresented: $showPaywall) {
             PaywallView()
+        }
+    }
+
+    @ViewBuilder
+    private var integrationsSection: some View {
+        Section("Integrations") {
+            pushRow
+            githubRow
+        }
+    }
+
+    @ViewBuilder
+    private var pushRow: some View {
+        switch env.push.authorizationStatus {
+        case .authorized:
+            Label("Push notifications: On", systemImage: "bell.fill")
+                .foregroundStyle(Palette.success)
+        case .denied:
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                Link(destination: settingsURL) {
+                    Label("Enable push in Settings", systemImage: "bell.slash")
+                        .foregroundStyle(Palette.accent)
+                }
+            }
+        default:
+            Button {
+                Task { await env.push.requestAuthorizationAndRegister() }
+            } label: {
+                Label("Enable push notifications", systemImage: "bell")
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var githubRow: some View {
+        if let profile = env.githubStore.connectedProfile {
+            LabeledContent("GitHub", value: "@\(profile.login)")
+            Button("Disconnect GitHub", role: .destructive) {
+                env.githubStore.disconnect()
+            }
+        } else {
+            Button {
+                Task { await env.githubStore.connect() }
+            } label: {
+                if env.githubStore.isConnecting {
+                    HStack(spacing: Spacing.sm) {
+                        ProgressView()
+                            .scaleEffect(0.8)
+                        Text("Connecting…")
+                            .foregroundStyle(Palette.textSecondary)
+                    }
+                } else {
+                    Label("Connect GitHub", systemImage: "chevron.left.forwardslash.chevron.right")
+                }
+            }
+            .disabled(env.githubStore.isConnecting)
+
+            if let error = env.githubStore.connectError {
+                Text(error)
+                    .font(Typography.footnote())
+                    .foregroundStyle(Palette.danger)
+            }
         }
     }
 

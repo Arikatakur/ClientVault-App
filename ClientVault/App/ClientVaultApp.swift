@@ -5,6 +5,7 @@ import GoogleSignIn
 
 @main
 struct ClientVaultApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @State private var environment = AppEnvironment.live()
     @Environment(\.scenePhase) private var scenePhase
 
@@ -55,13 +56,20 @@ struct ClientVaultApp: App {
                             environment.vaultVM.lock()
                         }
                         backgroundedAt = nil
+                        // Refresh push status in case the user changed it in Settings app.
+                        Task { await environment.push.checkStatus() }
                     default:
                         break
                     }
                 }
                 .task {
-                    // Restore an existing session on cold launch.
+                    // Wire AppDelegate push-token callback to PushRegistrar.
+                    // didRegister is nonisolated so it's safe to call from this closure.
+                    appDelegate.onDeviceToken = { data in
+                        environment.push.didRegister(deviceToken: data)
+                    }
                     await environment.auth.restore()
+                    await environment.push.checkStatus()
                 }
                 .onOpenURL { url in
                     #if canImport(GoogleSignIn)
