@@ -13,6 +13,12 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (preserved
 > in git history; no longer in the working tree).
 
+## [0.24.1] - 2026-06-17
+
+### Fixed
+- `AuthTests`: added missing `gitHubClientID: nil` argument to `AppConfig` initializer
+  (CI build failure after `AppConfig` gained the property in 0.24.0).
+
 ## [0.24.0] - 2026-06-17
 
 **Push + GitHub OAuth — Phase 7.** APNs registration with proper permission request,
@@ -52,10 +58,6 @@ section in Settings wired to both.
 - `AppEnvironment` gains `githubStore: GitHubStore`.
 - `PushRegistering` protocol removed (only one implementation; no test replacements).
 - `ClientVaultApp` refreshes push authorization status on every active foreground return.
-
-### Fixed
-- `AuthTests`: added missing `gitHubClientID: nil` argument to `AppConfig` initializer
-  (CI build failure after `AppConfig` gained the new property).
 
 ### Internal
 - Push `aps-environment` entitlement intentionally **not added**: requires the App ID Push
