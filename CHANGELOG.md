@@ -51,12 +51,20 @@ paywall, biometric unlock toggle wired to the vault, and interval-based auto-loc
 - **`SettingsView` Plan section** — "Upgrade to Pro" button opens `PaywallView` as
   a sheet. Hidden when already Pro.
 
+### Fixed
+- `VaultViewModel.loadStoredConfig()`: removed redundant second `guard let data`
+  binding. `try?` on a `throws -> Data?` function collapses `Data??` to `Data?` in
+  Swift, so the outer `guard let` already produces `data: Data` — the second
+  binding was invalid and caused a CI build failure.
+
 ### Internal
 - `EntitlementStore.init` now requires a `StoreKitServicing` dependency; updated in
   `AppEnvironment.live()`. `LiveStoreKitService` used when `config.hasBackend`,
   `DevStoreKitService` otherwise.
 - Removed redundant `session.onEnteredBackground()` from `ClientVaultApp`; vault
   state stays consistent via `vaultVM.lock()` (which already calls `session.lockVault()`).
+- CI: updated `ios-ci.yml` simulator destination from `iPhone 15` to `iPhone 16`
+  — Xcode 26.3 (latest-stable) no longer ships an iPhone 15 simulator runtime.
 
 ---
 
