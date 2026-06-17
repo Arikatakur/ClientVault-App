@@ -81,8 +81,7 @@ platform :ios do
       output_name: "ClientVault.ipa",
       xcargs: "DEVELOPMENT_TEAM=#{ENV.fetch('APPLE_TEAM_ID')} " \
               "CODE_SIGN_STYLE=Manual " \
-              "CODE_SIGN_IDENTITY='Apple Distribution' " \
-              "PROVISIONING_PROFILE_SPECIFIER='match AppStore org.clientvault.app'"
+              "CODE_SIGN_IDENTITY='Apple Distribution'"
     )
 
     upload_to_testflight(
