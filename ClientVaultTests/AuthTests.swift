@@ -30,7 +30,8 @@ final class AuthServiceTests: XCTestCase {
             apiBaseURL: URL(string: "https://example.test")!,
             keychainService: "test",
             hasBackend: hasBackend,
-            googleClientID: nil
+            googleClientID: nil,
+            gitHubClientID: nil
         )
         let service = LiveAuthService(api: api, tokenStore: tokenStore, session: session, config: config)
         return (service, tokenStore, session)
