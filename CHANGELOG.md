@@ -10,8 +10,8 @@ All notable changes to ClientVault are documented here. The format follows
 > **continues the version line at `0.18.0`** — not `0.1.0` — because App Store
 > Connect requires each TestFlight/App Store upload to have a higher version and
 > build number than the last, and the Flutter app already shipped `0.17.0+19`.
-> Entries at `0.17.0` and below describe the archived **Flutter era** (now under
-> [`legacy/flutter/`](legacy/flutter/)).
+> Entries at `0.17.0` and below describe the archived **Flutter era** (preserved
+> in git history; no longer in the working tree).
 
 ## [0.23.0] - 2026-06-17
 

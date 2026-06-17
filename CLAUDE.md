@@ -11,8 +11,8 @@ Claude must follow these instructions whenever working on this repository.
 > **Architecture pivot (2026-06):** ClientVault was rewritten from a local-first
 > Flutter app into a native SwiftUI + cloud app, per
 > [`docs/rewrite-blueprint.md`](docs/rewrite-blueprint.md) (the single source of
-> truth). The Flutter codebase is archived under [`legacy/flutter/`](legacy/flutter/)
-> for reference and is no longer built. The native app **continues the version
+> truth). The Flutter codebase has been removed from the working tree but is
+> preserved in git history. The native app **continues the version
 > line at `0.18.0`** (not `0.1.0`): App Store Connect requires every upload to have
 > a higher version/build than the last, and the Flutter app already shipped
 > `0.17.0+19`.

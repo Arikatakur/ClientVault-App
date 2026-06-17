@@ -4,15 +4,16 @@
 > payments, and a zero-knowledge encrypted vault** — built with **SwiftUI** on a
 > **cloud backend**, with an Apple-quality dark UI.
 
-**Status:** `v0.18.0` — Phase 1 (Foundation): design system · navigation shell ·
-privacy shield · core service seams. Cloud features land phase by phase.
+**Status:** `v0.23.0` — Phase 6 (Settings + Entitlements): StoreKit 2 paywall ·
+interval auto-lock · biometric toggle wired to vault state.
 
 > **This is a rewrite.** ClientVault began as a local-first Flutter app (through
 > `v0.17.0`). It has been rebuilt as a native SwiftUI + cloud app following
 > [`docs/rewrite-blueprint.md`](docs/rewrite-blueprint.md). The Flutter codebase
-> is archived under [`legacy/flutter/`](legacy/flutter/). The native app
-> **continues the version line at `0.18.0`** (not `0.1.0`) so TestFlight/App Store
-> build and version numbers keep climbing past the shipped `0.17.0`.
+> has been removed from the working tree and is preserved in git history. The
+> native app **continues the version line at `0.18.0`** (not `0.1.0`) so
+> TestFlight/App Store build and version numbers keep climbing past the shipped
+> `0.17.0`.
 
 ---
 
@@ -72,7 +73,6 @@ ClientVault/
   Resources/               # Info.plist, entitlements, Assets.xcassets
 ClientVaultTests/          # crypto, mapping, design-token tests
 docs/                      # blueprint, architecture, security model, backend, milestones
-legacy/flutter/            # archived Flutter app (not built)
 ```
 
 ## Security model (short version)
