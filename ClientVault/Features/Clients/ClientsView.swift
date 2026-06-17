@@ -43,6 +43,14 @@ struct ClientsView: View {
         }
         .task { await vm.load() }
         .animation(Motion.spring, value: vm.clients.count)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if let msg = vm.errorMessage {
+                ErrorBanner(message: msg, retry: { await vm.load() })
+                    .padding(.bottom, Spacing.xs)
+                    .background(Palette.background)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
     }
 
     // MARK: Sub-views
@@ -102,6 +110,7 @@ struct ClientsView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .refreshable { await vm.load() }
         .navigationDestination(for: Client.self) { client in
             ClientDetailView(clientId: client.id, vm: vm)
         }

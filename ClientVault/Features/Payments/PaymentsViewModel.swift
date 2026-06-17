@@ -31,6 +31,12 @@ final class PaymentsViewModel {
         payments.filter { $0.deletedAt == nil && $0.status != .paid }.count
     }
 
+    /// All past-due unpaid payments, sorted earliest due first.
+    var overduePayments: [Payment] {
+        payments.filter { $0.isOverdue && $0.deletedAt == nil }
+            .sorted { ($0.dueDate ?? .distantFuture) < ($1.dueDate ?? .distantFuture) }
+    }
+
     // MARK: - Formatting
 
     func formatted(_ payment: Payment) -> String {
@@ -123,6 +129,14 @@ final class PaymentsViewModel {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func markPaid(id: UUID) async {
+        guard var payment = payments.first(where: { $0.id == id }) else { return }
+        payment.status = .paid
+        payment.paidAt = Date()
+        payment.updatedAt = Date()
+        await update(payment)
     }
 
     private func nilIfBlank(_ s: String?) -> String? {

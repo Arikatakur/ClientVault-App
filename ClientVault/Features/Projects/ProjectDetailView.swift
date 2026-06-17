@@ -170,6 +170,16 @@ struct ProjectDetailView: View {
                 ForEach(rows) { payment in
                     PaymentRow(payment: payment, formatted: paymentsVM.formatted(payment))
                         .contextMenu {
+                            if payment.status != .paid {
+                                Button {
+                                    Task {
+                                        await paymentsVM.markPaid(id: payment.id)
+                                        Haptics.shared.success()
+                                    }
+                                } label: {
+                                    Label("Mark as paid", systemImage: "checkmark.circle.fill")
+                                }
+                            }
                             Button { editingPayment = payment } label: {
                                 Label("Edit", systemImage: "pencil")
                             }

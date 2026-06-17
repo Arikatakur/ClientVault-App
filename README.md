@@ -4,8 +4,8 @@
 > payments, and a zero-knowledge encrypted vault** — built with **SwiftUI** on a
 > **cloud backend**, with an Apple-quality dark UI.
 
-**Status:** `v0.24.0` — Phase 7 (Push + GitHub OAuth): APNs registration ·
-GitHub OAuth connect via `ASWebAuthenticationSession` · Settings Integrations section.
+**Status:** `v0.25.0` — Phase 8 (Polish): `ErrorBanner` component · pull-to-refresh on all lists ·
+Dashboard overhaul (overdue payments, due-this-week projects, reactive stat tiles) · mark-as-paid context menu on payment rows.
 
 > **This is a rewrite.** ClientVault began as a local-first Flutter app (through
 > `v0.17.0`). It has been rebuilt as a native SwiftUI + cloud app following

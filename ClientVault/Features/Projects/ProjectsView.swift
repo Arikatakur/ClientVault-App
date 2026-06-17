@@ -54,6 +54,14 @@ struct ProjectsView: View {
         .task { await vm.load() }
         .task { await clientsVM.load() }
         .animation(Motion.spring, value: vm.projects.count)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if let msg = vm.errorMessage {
+                ErrorBanner(message: msg, retry: { await vm.load() })
+                    .padding(.bottom, Spacing.xs)
+                    .background(Palette.background)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
     }
 
     // MARK: - Status filter
@@ -137,6 +145,7 @@ struct ProjectsView: View {
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .refreshable { await vm.load() }
         .navigationDestination(for: Project.self) { project in
             ProjectDetailView(projectId: project.id, vm: vm, clientsVM: clientsVM, paymentsVM: paymentsVM)
         }

@@ -13,6 +13,31 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (preserved
 > in git history; no longer in the working tree).
 
+## [0.25.0] - 2026-06-17
+
+**Polish — Phase 8.** Dashboard overhaul with live data, `ErrorBanner` component, pull-to-refresh on all lists, and mark-as-paid shortcut on payment rows.
+
+### Added
+- **`ErrorBanner`** shared component — inline error strip shown at the top of a list via
+  `.safeAreaInset(edge: .top)` with an optional async Retry button; uses
+  `.transition(.move(edge: .top).combined(with: .opacity))` for smooth entry/exit.
+- **Dashboard overhaul** — removed placeholder "Welcome" card; added:
+  - Reactive **stat tiles** with `contentTransition(.numericText())` and correct
+    `Palette.danger` tint on the Outstanding tile when overdue payments exist.
+  - **Overdue Payments section** — shows up to 3 rows (styled danger tint) + "+N more" label.
+  - **Due This Week section** — projects due within 7 days, sorted ascending.
+  - **Get-started card** — shown only when both clients and projects are empty.
+  - `.refreshable` with concurrent `async let` loads for all three VMs.
+- **`PaymentsViewModel.overduePayments`** — `[Payment]` computed from in-memory list,
+  filtered to `isOverdue && deletedAt == nil`, sorted by due date ascending.
+- **`PaymentsViewModel.markPaid(id:)`** — sets `status = .paid`, `paidAt = Date()`,
+  `updatedAt = Date()`, and persists via `update()`.
+- **Mark as paid** context menu item on payment rows in `ProjectDetailView` — only shown
+  when `payment.status != .paid`; triggers haptic success on completion.
+- **Pull-to-refresh** (`.refreshable`) on Clients and Projects lists.
+- **`ErrorBanner`** wired into Clients, Projects, and Dashboard views via
+  `.safeAreaInset(edge: .top)` bound to `vm.errorMessage`.
+
 ## [0.24.1] - 2026-06-17
 
 ### Fixed
