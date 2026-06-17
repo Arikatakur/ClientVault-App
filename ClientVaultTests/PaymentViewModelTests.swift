@@ -31,7 +31,8 @@ final class PaymentViewModelTests: XCTestCase {
         var payment = makePayment(amountMinorUnits: 999, status: .pending)
         payment.deletedAt = Date()
         _ = try await repo.create(payment)
-        XCTAssertTrue((try await repo.list()).isEmpty)
+        let list = try await repo.list()
+        XCTAssertTrue(list.isEmpty)
     }
 
     func testUpdate() async throws {
@@ -49,7 +50,8 @@ final class PaymentViewModelTests: XCTestCase {
         let payment = makePayment(amountMinorUnits: 500, status: .pending)
         _ = try await repo.create(payment)
         try await repo.delete(id: payment.id)
-        XCTAssertTrue((try await repo.list()).isEmpty)
+        let list = try await repo.list()
+        XCTAssertTrue(list.isEmpty)
     }
 
     // MARK: - PaymentsViewModel rollups
