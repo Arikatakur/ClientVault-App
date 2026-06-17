@@ -13,6 +13,11 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (preserved
 > in git history; no longer in the working tree).
 
+## [0.25.1] - 2026-06-17
+
+### Fixed
+- `DashboardView`: `ProjectStatus.completed` → `.done` (CI build failure; enum has no `completed` case).
+
 ## [0.25.0] - 2026-06-17
 
 **Polish — Phase 8.** Dashboard overhaul with live data, `ErrorBanner` component, pull-to-refresh on all lists, and mark-as-paid shortcut on payment rows.

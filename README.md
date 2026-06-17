@@ -4,7 +4,7 @@
 > payments, and a zero-knowledge encrypted vault** — built with **SwiftUI** on a
 > **cloud backend**, with an Apple-quality dark UI.
 
-**Status:** `v0.25.0` — Phase 8 (Polish): `ErrorBanner` component · pull-to-refresh on all lists ·
+**Status:** `v0.25.1` — Phase 8 (Polish): `ErrorBanner` component · pull-to-refresh on all lists ·
 Dashboard overhaul (overdue payments, due-this-week projects, reactive stat tiles) · mark-as-paid context menu on payment rows.
 
 > **This is a rewrite.** ClientVault began as a local-first Flutter app (through

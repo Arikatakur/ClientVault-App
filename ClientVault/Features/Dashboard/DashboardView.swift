@@ -20,7 +20,7 @@ struct DashboardView: View {
         let cutoff = Date().addingTimeInterval(7 * 24 * 3600)
         return projectsVM.projects.filter { project in
             guard let due = project.dueDate, project.deletedAt == nil else { return false }
-            return due > Date() && due <= cutoff && project.status != .completed
+            return due > Date() && due <= cutoff && project.status != .done
         }
         .sorted { ($0.dueDate ?? .distantFuture) < ($1.dueDate ?? .distantFuture) }
     }
