@@ -56,6 +56,9 @@ paywall, biometric unlock toggle wired to the vault, and interval-based auto-loc
   binding. `try?` on a `throws -> Data?` function collapses `Data??` to `Data?` in
   Swift, so the outer `guard let` already produces `data: Data` — the second
   binding was invalid and caused a CI build failure.
+- `VaultSetupView`, `VaultUnlockView`, `PaywallView`: `PrimaryButton` call sites
+  corrected to use the `title:` argument label — the component's memberwise init
+  requires it.
 
 ### Internal
 - `EntitlementStore.init` now requires a `StoreKitServicing` dependency; updated in

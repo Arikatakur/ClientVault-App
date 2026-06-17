@@ -78,7 +78,7 @@ struct PaywallView: View {
                 .frame(maxWidth: .infinity)
         } else if let product = entitlements.products.first {
             VStack(spacing: Spacing.sm) {
-                PrimaryButton("Subscribe — \(product.displayPrice)/month") {
+                PrimaryButton(title: "Subscribe — \(product.displayPrice)/month") {
                     Task { await entitlements.purchase(product) }
                 }
                 Button("Restore purchases") {

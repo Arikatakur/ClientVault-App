@@ -53,7 +53,7 @@ struct VaultUnlockView: View {
                             .foregroundStyle(Palette.textSecondary)
                             .tint(Palette.vault)
                     } else {
-                        PrimaryButton("Unlock") {
+                        PrimaryButton(title: "Unlock") {
                             Task { await unlock() }
                         }
                         .disabled(password.isEmpty)

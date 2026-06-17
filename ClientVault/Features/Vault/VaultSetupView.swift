@@ -67,7 +67,7 @@ struct VaultSetupView: View {
                         .foregroundStyle(Palette.textSecondary)
                         .tint(Palette.vault)
                 } else {
-                    PrimaryButton("Create Vault") {
+                    PrimaryButton(title: "Create Vault") {
                         Task { await createVault() }
                     }
                     .disabled(!canCreate)
