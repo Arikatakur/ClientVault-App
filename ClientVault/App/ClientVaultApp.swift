@@ -31,6 +31,8 @@ struct ClientVaultApp: App {
                 .onChange(of: scenePhase, initial: true) { _, newPhase in
                     isObscured = (newPhase != .active)
                     if newPhase == .background {
+                        // lock() zeroes the DEK from memory then mirrors state to session.
+                        environment.vaultVM.lock()
                         environment.session.onEnteredBackground()
                     }
                 }

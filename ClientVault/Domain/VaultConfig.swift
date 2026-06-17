@@ -4,7 +4,7 @@ import Foundation
 /// secret and no key material the server can use): KDF params + salt let the
 /// master key be re-derived from the password on any device, and the wrapped DEK
 /// is only decryptable with that master key.
-struct VaultConfig: Codable, Equatable {
+struct VaultConfig: Codable, Equatable, Sendable {
     var kdfParameters: KDFParameters
     var salt: Data
     var wrappedDEK: EncryptedPayload

@@ -81,13 +81,36 @@ final class CryptoTests: XCTestCase {
         XCTAssertEqual(try crypto.open(decoded, using: key), Data("persist me".utf8))
     }
 
-    func testArgon2idNotYetImplemented() {
-        // Until a vetted Argon2 dependency lands, the KDF must throw rather than
-        // silently fall back to a weaker derivation.
+    func testArgon2idDerivesDeterministically() throws {
+        let kdf = Argon2idKeyDerivation()
+        // Salt must be exactly 16 bytes (crypto_pwhash_SALTBYTES).
+        let salt = Data(repeating: 0xAB, count: 16)
+        let params = KDFParameters(memoryKiB: 8 * 1024, iterations: 1, parallelism: 1,
+                                   saltLength: 16, version: 1)
+        // Same inputs must produce identical output across calls.
+        let key1 = try kdf.deriveKey(password: "test-password", salt: salt, parameters: params)
+        let key2 = try kdf.deriveKey(password: "test-password", salt: salt, parameters: params)
+        XCTAssertEqual(key1.rawData, key2.rawData, "KDF must be deterministic")
+        XCTAssertEqual(key1.rawData.count, 32, "output must be 256-bit")
+    }
+
+    func testArgon2idDifferentPasswordProducesDifferentKey() throws {
+        let kdf = Argon2idKeyDerivation()
+        let salt = Data(repeating: 0xCD, count: 16)
+        let params = KDFParameters(memoryKiB: 8 * 1024, iterations: 1, parallelism: 1,
+                                   saltLength: 16, version: 1)
+        let key1 = try kdf.deriveKey(password: "correct-horse", salt: salt, parameters: params)
+        let key2 = try kdf.deriveKey(password: "battery-staple", salt: salt, parameters: params)
+        XCTAssertNotEqual(key1.rawData, key2.rawData, "different passwords must produce different keys")
+    }
+
+    func testArgon2idWrongSaltLengthThrows() {
         let kdf = Argon2idKeyDerivation()
         XCTAssertThrowsError(
             try kdf.deriveKey(password: "pw", salt: Data([0, 1, 2, 3]), parameters: .default)
-        )
+        ) { error in
+            XCTAssertEqual(error as? CryptoError, .invalidKey)
+        }
     }
 
     func testKeyEncryptionKeyIsDeterministic() {

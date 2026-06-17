@@ -13,6 +13,62 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (now under
 > [`legacy/flutter/`](legacy/flutter/)).
 
+## [0.22.0] - 2026-06-17
+
+**Vault crypto — Phase 5.** Full zero-knowledge vault: Argon2id KDF, AES-256-GCM
+item encryption, reveal sheet with blur→clear animation, biometric unlock, and
+clipboard auto-clear. No backend yet — vault config persists locally in the
+Keychain as a dev seam; items are in-memory per session.
+
+### Added
+- **Real Argon2id KDF** — `Argon2idKeyDerivation` backed by libsodium
+  (`jedisct1/swift-sodium`). OWASP defaults: 64 MiB memory, 3 iterations. Replaces
+  the `CryptoError.notImplemented` stub; the key hierarchy (`VaultKeyManager`) was
+  already wired and is now fully functional.
+- **`VaultRepository`** — protocol + `InMemoryVaultRepository` (dev) +
+  `LiveVaultRepository` seam for the future Amplify backend.
+- **`VaultViewModel`** (`@MainActor @Observable`) — manages the DEK in memory only
+  (CryptoKit zeroes it on lock), drives setup/locked/unlocked routing, exposes
+  `addItem`, `updateItem`, `deleteItem`, `decryptBody`.
+- **`VaultSetupView`** — first-time vault password creation with confirm field and
+  real-time match indicator. Argon2id runs off the main thread; spinner shown.
+- **`VaultUnlockView`** — password unlock + biometric auto-attempt on appearance.
+  Falls back silently to password if biometric fails.
+- **`VaultListView`** — searchable encrypted item list with type icons, swipe-to-delete,
+  context menus, and lock button.
+- **`AddEditVaultItemView`** — add/edit form with per-type optional fields (username,
+  URL for passwords/API keys). Decrypts existing body for editing.
+- **`VaultItemRevealSheet`** — secrets start blurred; tap to reveal with
+  `.easeInOut` animation. Copy button clears clipboard after 10 seconds.
+  Biometric unlock option.
+- **`VaultItemBody`** — plaintext Codable struct (`secret`, `username?`, `url?`,
+  `notes?`) that is encrypted into `VaultItem.encryptedBody`.
+- **Biometric unlock** — DEK stored under `.biometryCurrentSet` Keychain protection;
+  invalidated when enrolled biometrics change. Enable/disable from the vault.
+- **Dashboard vault tile** — shows real item count when vault is unlocked.
+- **Tests** — `VaultKeyManagerTests`: bootstrap, unlock, wrong-password rejection,
+  determinism, item round-trip, DEK/KEK domain separation. `CryptoTests` updated
+  with Argon2id determinism, different-password differentiation, and wrong-salt-length
+  rejection tests.
+
+### Security
+- DEK never written to disk as plaintext — stored only as AES-GCM wrapped ciphertext
+  (`wrappedDEK` in `VaultConfig`) or under biometric Keychain protection.
+- `VaultConfig` (salt + wrapped DEK + KDF params) stored as JSON in the Keychain
+  (`ThisDeviceOnly`) for the pre-backend dev phase; moves server-side in the
+  backend phase.
+- Vault auto-locks on app background; `VaultViewModel.lock()` called first to zero
+  the DEK from memory before `SessionStore.onEnteredBackground()`.
+- Clipboard auto-cleared 10 seconds after copying any secret field.
+
+### Internal
+- `KDFParameters` and `VaultConfig` marked `Sendable` for safe capture in
+  `Task.detached` closures (Argon2id must not block the main thread).
+- `AppEnvironment` wired with `vaultVM` (InMemory dev fallback / Live seam).
+- `ClientVaultApp` calls `environment.vaultVM.lock()` on background transition.
+
+---
+
 ## [0.21.0] - 2026-06-16
 
 **Payments — Phase 4.** Per-project payment tracking with status badges, rollup

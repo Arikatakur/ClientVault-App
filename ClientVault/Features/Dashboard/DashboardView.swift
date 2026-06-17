@@ -7,6 +7,7 @@ struct DashboardView: View {
     private var clientsVM: ClientsViewModel { env.clientsVM }
     private var projectsVM: ProjectsViewModel { env.projectsVM }
     private var paymentsVM: PaymentsViewModel { env.paymentsVM }
+    private var vaultVM: VaultViewModel { env.vaultVM }
 
     private let columns = [GridItem(.flexible(), spacing: Spacing.md),
                            GridItem(.flexible(), spacing: Spacing.md)]
@@ -35,7 +36,7 @@ struct DashboardView: View {
                     )
                     StatTile(
                         title: "Vault items",
-                        value: "—",
+                        value: vaultVM.viewState == .unlocked ? "\(vaultVM.items.count)" : "—",
                         icon: "lock.shield",
                         tint: Palette.vault
                     )

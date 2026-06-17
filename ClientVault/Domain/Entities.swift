@@ -69,6 +69,16 @@ struct Payment: Identifiable, Equatable {
     var deletedAt: Date?
 }
 
+/// Plaintext body encrypted into `VaultItem.encryptedBody`. Never leaves the
+/// device unencrypted. `secret` is the primary copyable value (password, API
+/// key, card number, note body). The optional fields are shown when non-nil.
+struct VaultItemBody: Codable, Sendable {
+    var secret: String
+    var username: String?
+    var url: String?
+    var notes: String?
+}
+
 enum VaultItemType: String, Codable, CaseIterable, Identifiable {
     case password, apiKey, secureNote, card, custom
     var id: String { rawValue }

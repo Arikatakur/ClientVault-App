@@ -22,6 +22,7 @@ final class AppEnvironment {
     let clientsVM: ClientsViewModel
     let projectsVM: ProjectsViewModel
     let paymentsVM: PaymentsViewModel
+    let vaultVM: VaultViewModel
 
     init(
         config: AppConfig,
@@ -36,7 +37,8 @@ final class AppEnvironment {
         notifications: LocalNotificationScheduling,
         clientsVM: ClientsViewModel,
         projectsVM: ProjectsViewModel,
-        paymentsVM: PaymentsViewModel
+        paymentsVM: PaymentsViewModel,
+        vaultVM: VaultViewModel
     ) {
         self.config = config
         self.session = session
@@ -51,6 +53,7 @@ final class AppEnvironment {
         self.clientsVM = clientsVM
         self.projectsVM = projectsVM
         self.paymentsVM = paymentsVM
+        self.vaultVM = vaultVM
     }
 
     /// Wires the production implementations together.
@@ -72,6 +75,10 @@ final class AppEnvironment {
         let paymentRepo: PaymentRepositing = config.hasBackend
             ? LivePaymentRepository(api: api)
             : InMemoryPaymentRepository()
+        let vaultRepo: VaultRepositing = config.hasBackend
+            ? LiveVaultRepository(api: api)
+            : InMemoryVaultRepository()
+        let crypto = AESGCMCrypto()
 
         return AppEnvironment(
             config: config,
@@ -80,13 +87,19 @@ final class AppEnvironment {
             entitlements: EntitlementStore(),
             haptics: Haptics.shared,
             keychain: keychain,
-            crypto: AESGCMCrypto(),
+            crypto: crypto,
             api: api,
             push: PushRegistrar(),
             notifications: LocalNotificationScheduler(),
             clientsVM: ClientsViewModel(repo: clientRepo),
             projectsVM: ProjectsViewModel(repo: projectRepo),
-            paymentsVM: PaymentsViewModel(repo: paymentRepo)
+            paymentsVM: PaymentsViewModel(repo: paymentRepo),
+            vaultVM: VaultViewModel(
+                crypto: crypto,
+                keychain: keychain,
+                repo: vaultRepo,
+                session: session
+            )
         )
     }
 }
