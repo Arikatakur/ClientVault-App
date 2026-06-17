@@ -13,6 +13,15 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (now under
 > [`legacy/flutter/`](legacy/flutter/)).
 
+## [0.22.1] - 2026-06-17
+
+### Fixed
+- `unlockWithBiometrics()` was calling `SecItemCopyMatching` on the main actor,
+  blocking the UI thread during the Face ID / Touch ID prompt. The Keychain read
+  is now dispatched via `Task.detached` (matching the pattern used by `unlock()`
+  and `setupVault()`), keeping the main actor free while the biometric challenge
+  resolves.
+
 ## [0.22.0] - 2026-06-17
 
 **Vault crypto — Phase 5.** Full zero-knowledge vault: Argon2id KDF, AES-256-GCM

@@ -117,12 +117,14 @@ final class VaultViewModel {
 
     func unlockWithBiometrics() async throws {
         guard biometricUnlockEnabled else { throw VaultError.biometricsNotEnrolled }
-        // SecItemCopyMatching on a biometric-protected item triggers the system
-        // Face ID / Touch ID prompt automatically; this call blocks until resolved.
-        guard let dekData = try keychain.get(Self.biometricDEKKey), let dekData else {
-            throw VaultError.biometricsNotEnrolled
-        }
-        guard dekData.count == 32 else { throw VaultError.invalidDEK }
+        // Move the SecItemCopyMatching call — which blocks until the Face ID / Touch ID
+        // prompt resolves — off the main actor so the UI stays responsive.
+        let keychainRef = keychain
+        let dekKey = Self.biometricDEKKey
+        let dekData = try await Task.detached(priority: .userInitiated) {
+            try keychainRef.get(dekKey)
+        }.value
+        guard let dekData, dekData.count == 32 else { throw VaultError.invalidDEK }
         dek = SymmetricKey(data: dekData)
         viewState = .unlocked
         session.vaultUnlocked()
