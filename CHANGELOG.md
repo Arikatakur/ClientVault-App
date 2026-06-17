@@ -13,6 +13,53 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (now under
 > [`legacy/flutter/`](legacy/flutter/)).
 
+## [0.23.0] - 2026-06-17
+
+**Settings + Plan — Phase 6.** StoreKit 2 entitlement scaffolding, a Pro upgrade
+paywall, biometric unlock toggle wired to the vault, and interval-based auto-lock
+(replacing the unconditional always-lock-on-background).
+
+### Added
+- **`StoreKitService`** — `StoreKitServicing` protocol + `LiveStoreKitService`
+  (StoreKit 2: `Product.products`, `product.purchase()`, `AppStore.sync()`) +
+  `DevStoreKitService` (empty mock for dev/CI). Injected into `EntitlementStore`
+  via `AppEnvironment`.
+- **`EntitlementStore`** wired to StoreKit 2 — subscribes to `Transaction.updates`
+  and drains `Transaction.unfinished` on launch; `checkCurrentEntitlements()` sets
+  plan to `.pro` for any verified, non-revoked transaction matching the Pro product.
+  `purchase()` and `restorePurchases()` delegate to the service and re-check after.
+- **`PaywallView`** — upgrade sheet showing three Pro feature rows (unlimited clients,
+  cloud sync, secure attachments) and a "Subscribe — $x.xx/month" button that drives
+  StoreKit purchase. Shows "unavailable" gracefully when `Product.products` returns
+  empty (dev/CI, no App Store product configured yet). Auto-dismisses on Pro upgrade.
+  Restore purchases button always visible.
+- **`AutoLockInterval`** extracted to its own file so both `SettingsView` and
+  `ClientVaultApp` can reference it.
+- **Interval-based vault auto-lock** — `ClientVaultApp` now records `backgroundedAt`
+  when the app enters the background. On foreground return, if the elapsed time
+  exceeds the user's chosen interval, the vault is locked. The "Immediately" option
+  preserves the previous always-lock-on-background behavior; other intervals keep the
+  DEK in memory while the app is suspended (privacy shield still obscures the snapshot).
+  Preference stored in `UserDefaults` via `@AppStorage("settings.autoLockInterval")`,
+  shared between `SettingsView` and `ClientVaultApp`.
+
+### Changed
+- **`SettingsView` Security section** — biometric toggle now reads/writes
+  `vaultVM.biometricUnlockEnabled` directly (was a no-op local `@State`). Disabled
+  with an explanatory footer when the vault is locked. Auto-lock picker persists via
+  `@AppStorage`. Error message shown inline if biometric enrollment fails.
+- **`SettingsView` Plan section** — "Upgrade to Pro" button opens `PaywallView` as
+  a sheet. Hidden when already Pro.
+
+### Internal
+- `EntitlementStore.init` now requires a `StoreKitServicing` dependency; updated in
+  `AppEnvironment.live()`. `LiveStoreKitService` used when `config.hasBackend`,
+  `DevStoreKitService` otherwise.
+- Removed redundant `session.onEnteredBackground()` from `ClientVaultApp`; vault
+  state stays consistent via `vaultVM.lock()` (which already calls `session.lockVault()`).
+
+---
+
 ## [0.22.1] - 2026-06-17
 
 ### Fixed

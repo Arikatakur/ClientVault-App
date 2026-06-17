@@ -12,6 +12,15 @@ struct ClientVaultApp: App {
     /// scene phase so the app-switcher snapshot never captures sensitive content.
     @State private var isObscured = false
 
+    /// Timestamp recorded when the app enters background. Used to implement
+    /// interval-based vault auto-lock: on foreground return, if the elapsed time
+    /// exceeds the user's chosen interval, the vault is locked.
+    @State private var backgroundedAt: Date?
+
+    /// Mirrors the user's auto-lock preference from Settings. Shared via
+    /// UserDefaults so changes in SettingsView take effect immediately here.
+    @AppStorage("settings.autoLockInterval") private var autoLockInterval: AutoLockInterval = .twoMinutes
+
     var body: some Scene {
         WindowGroup {
             RootView()
@@ -30,10 +39,24 @@ struct ClientVaultApp: App {
                 }
                 .onChange(of: scenePhase, initial: true) { _, newPhase in
                     isObscured = (newPhase != .active)
-                    if newPhase == .background {
-                        // lock() zeroes the DEK from memory then mirrors state to session.
-                        environment.vaultVM.lock()
-                        environment.session.onEnteredBackground()
+                    switch newPhase {
+                    case .background:
+                        backgroundedAt = Date()
+                        // Lock immediately only for the "Immediately" setting.
+                        // For longer intervals, the DEK stays in memory while the
+                        // app is suspended (privacy shield covers the snapshot).
+                        if autoLockInterval == .immediately {
+                            environment.vaultVM.lock()
+                        }
+                    case .active:
+                        // Lock on foreground return if enough time has elapsed.
+                        if let t = backgroundedAt,
+                           Date.now.timeIntervalSince(t) >= autoLockInterval.seconds {
+                            environment.vaultVM.lock()
+                        }
+                        backgroundedAt = nil
+                    default:
+                        break
                     }
                 }
                 .task {

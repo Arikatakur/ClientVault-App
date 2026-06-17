@@ -12,10 +12,11 @@ rewrite's foundation is `0.18.0` and minor bumps continue from there. (Build num
 |---------|-------|-------|--------|
 | `0.18.0` | 1 — Foundation | XcodeGen scaffold, design system, nav shell, privacy shield, core service seams, crypto core, docs, CI | ✅ done |
 | `0.19.0` | 2 — Auth | Sign in with Apple + Google, backend token exchange seam (+ dev fallback), session persistence, account deletion | ✅ done |
-| `0.20.0` | 3 — Clients + Projects | Cloud CRUD, search, swipe actions/context menus, clients ↔ projects, premium list UX | |
-| `0.21.0` | 4 — Payments | Per-project invoices/payments, partials, overdue flag, local reminders, dashboard rollups | |
-| `0.22.0` | 5 — Vault | Argon2id (vetted dep), full key hierarchy, ciphertext sync, lazy reveal sheet (blur→clear), biometric unlock, clipboard auto-clear | |
-| `0.23.0` | 6 — Settings + Plan | Entitlements UX gate + StoreKit, server-validation webhook seam, auto-lock/biometric settings wired | |
+| `0.20.0` | 3 — Clients + Projects | Cloud CRUD, search, swipe actions/context menus, clients ↔ projects, premium list UX | ✅ done |
+| `0.21.0` | 4 — Payments | Per-project invoices/payments, partials, overdue flag, local reminders, dashboard rollups | ✅ done |
+| `0.22.0` | 5 — Vault | Argon2id (vetted dep), full key hierarchy, ciphertext sync, lazy reveal sheet (blur→clear), biometric unlock, clipboard auto-clear | ✅ done |
+| `0.22.1` | 5 — Vault patch | Biometric Keychain read moved off `@MainActor` (`Task.detached`) so Face ID prompt doesn't block UI thread | ✅ done |
+| `0.23.0` | 6 — Settings + Plan | Entitlements UX gate + StoreKit, server-validation webhook seam, auto-lock/biometric settings wired | ✅ done |
 | `0.24.0` | 7 — Push | APNs registration upload, optional cross-device pushes, repo-activity (optional) | |
 | `0.25.0`+ | Polish | error UX states, animations, haptics, empty/loading states, backup/export | |
 | `0.26.0` | TestFlight candidate | app icon, splash, signing (Fastlane Match), `release-ios.yml` (tag `v*`), legal/support links | |

@@ -1,16 +1,16 @@
 import SwiftUI
 
-/// Settings. Auto-lock and biometric toggles are local state seams until the
-/// Vault/Security phase wires them to the keychain policy; Account and Plan read
-/// real session/entitlement state, and Sign out works.
 struct SettingsView: View {
     @Environment(AppEnvironment.self) private var env
     @Environment(SessionStore.self) private var session
     @Environment(EntitlementStore.self) private var entitlements
 
-    @State private var biometricUnlock = true
-    @State private var autoLock: AutoLockInterval = .twoMinutes
+    @AppStorage("settings.autoLockInterval") private var autoLockInterval: AutoLockInterval = .twoMinutes
     @State private var showDeleteConfirm = false
+    @State private var showPaywall = false
+    @State private var biometricError: String?
+
+    private var vaultVM: VaultViewModel { env.vaultVM }
 
     var body: some View {
         List {
@@ -31,16 +31,34 @@ struct SettingsView: View {
             Section("Plan") {
                 LabeledContent("Current plan", value: entitlements.plan.displayName)
                 if !entitlements.isPro {
-                    Button("Upgrade to Pro") { Haptics.shared.impact(.light) }
+                    Button("Upgrade to Pro") {
+                        Haptics.shared.impact(.light)
+                        showPaywall = true
+                    }
                 }
             }
 
-            Section("Security") {
-                Toggle("Unlock with Face ID", isOn: $biometricUnlock)
-                Picker("Auto-lock", selection: $autoLock) {
+            Section {
+                Toggle("Unlock with Face ID", isOn: biometricBinding)
+                    .disabled(vaultVM.viewState != .unlocked)
+
+                if let error = biometricError {
+                    Text(error)
+                        .font(Typography.footnote())
+                        .foregroundStyle(Palette.danger)
+                }
+
+                Picker("Auto-lock", selection: $autoLockInterval) {
                     ForEach(AutoLockInterval.allCases) { interval in
                         Text(interval.displayName).tag(interval)
                     }
+                }
+            } header: {
+                Text("Security")
+            } footer: {
+                if vaultVM.viewState != .unlocked {
+                    Text("Unlock the vault to change biometric settings.")
+                        .font(Typography.footnote())
                 }
             }
 
@@ -63,12 +81,34 @@ struct SettingsView: View {
             Button("Delete account", role: .destructive) { deleteAccount() }
             Button("Cancel", role: .cancel) {}
         }
+        .sheet(isPresented: $showPaywall) {
+            PaywallView()
+        }
+    }
+
+    private var biometricBinding: Binding<Bool> {
+        Binding(
+            get: { vaultVM.biometricUnlockEnabled },
+            set: { enable in
+                biometricError = nil
+                do {
+                    if enable {
+                        try vaultVM.enableBiometricUnlock()
+                    } else {
+                        try vaultVM.disableBiometricUnlock()
+                    }
+                    Haptics.shared.success()
+                } catch {
+                    biometricError = error.localizedDescription
+                    Haptics.shared.error()
+                }
+            }
+        )
     }
 
     private func deleteAccount() {
         Task {
             Haptics.shared.warning()
-            // On success this signs out, and RootView routes back to sign-in.
             try? await env.auth.deleteAccount()
         }
     }
@@ -77,29 +117,5 @@ struct SettingsView: View {
         let v = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
         let b = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
         return "\(v) (\(b))"
-    }
-}
-
-enum AutoLockInterval: String, CaseIterable, Identifiable {
-    case immediately, thirtySeconds, twoMinutes, fiveMinutes
-
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .immediately: return "Immediately"
-        case .thirtySeconds: return "After 30s"
-        case .twoMinutes: return "After 2 min"
-        case .fiveMinutes: return "After 5 min"
-        }
-    }
-
-    var seconds: TimeInterval {
-        switch self {
-        case .immediately: return 0
-        case .thirtySeconds: return 30
-        case .twoMinutes: return 120
-        case .fiveMinutes: return 300
-        }
     }
 }

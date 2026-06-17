@@ -80,11 +80,15 @@ final class AppEnvironment {
             : InMemoryVaultRepository()
         let crypto = AESGCMCrypto()
 
+        let storeKit: StoreKitServicing = config.hasBackend
+            ? LiveStoreKitService()
+            : DevStoreKitService()
+
         return AppEnvironment(
             config: config,
             session: session,
             auth: auth,
-            entitlements: EntitlementStore(),
+            entitlements: EntitlementStore(storeKit: storeKit),
             haptics: Haptics.shared,
             keychain: keychain,
             crypto: crypto,
