@@ -63,9 +63,10 @@ final class VaultViewModel {
     // MARK: - Config persistence
 
     private func loadStoredConfig() {
+        // try? on a throwing Data?-returning function collapses Data?? → Data?,
+        // so a single guard let is sufficient to unwrap to Data.
         guard
             let data = try? keychain.get(Self.configKey),
-            let data,
             let decoded = try? JSONDecoder.clientVault.decode(VaultConfig.self, from: data)
         else {
             viewState = .setup
@@ -73,7 +74,7 @@ final class VaultViewModel {
         }
         config = decoded
         viewState = .locked
-        biometricUnlockEnabled = ((try? keychain.get(Self.biometricMarker)) ?? nil) != nil
+        biometricUnlockEnabled = (try? keychain.get(Self.biometricMarker)) != nil
     }
 
     // MARK: - First-time setup
