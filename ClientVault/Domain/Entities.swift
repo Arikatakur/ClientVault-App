@@ -80,17 +80,38 @@ struct VaultItemBody: Codable, Sendable {
 }
 
 enum VaultItemType: String, Codable, CaseIterable, Identifiable {
-    case password, apiKey, secureNote, card, custom
+    case password, apiKey, secureNote, card, totp, custom
     var id: String { rawValue }
     var displayName: String {
         switch self {
-        case .password: return "Password"
-        case .apiKey: return "API Key"
+        case .password:   return "Password"
+        case .apiKey:     return "API Key"
         case .secureNote: return "Secure Note"
-        case .card: return "Card"
-        case .custom: return "Custom"
+        case .card:       return "Card"
+        case .totp:       return "TOTP / 2FA"
+        case .custom:     return "Custom"
         }
     }
+}
+
+struct ProjectTask: Identifiable, Equatable, Hashable {
+    let id: UUID
+    var projectId: UUID
+    var title: String
+    var isCompleted: Bool
+    var position: Int
+    var createdAt: Date
+    var updatedAt: Date
+    var deletedAt: Date?
+}
+
+struct ClientNote: Identifiable, Equatable, Hashable {
+    let id: UUID
+    var clientId: UUID
+    var body: String
+    var createdAt: Date
+    var updatedAt: Date
+    var deletedAt: Date?
 }
 
 /// A vault item. Only `title`, `type`, optional `tags`, and the client/project

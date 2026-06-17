@@ -13,6 +13,28 @@ All notable changes to ClientVault are documented here. The format follows
 > Entries at `0.17.0` and below describe the archived **Flutter era** (preserved
 > in git history; no longer in the working tree).
 
+## [0.26.0] - 2026-06-17
+
+**Power features — Phase 9.** Project task checklists, client notes, TOTP/2FA authenticator in the vault, and a cryptographically secure password generator with strength meter.
+
+### Added
+- **Project Tasks** — checklist section on `ProjectDetailView`: add tasks inline, tap to toggle complete/incomplete (with strikethrough + checkmark animation), swipe-to-delete. Progress bar above the list shows completed/total. `TasksViewModel` + `TaskRepositing` (InMemory + Live seam).
+- **Client Notes** — notes section on `ClientDetailView`: add multi-line notes, tap to edit (inline sheet), swipe-to-delete with context menu. Sorted reverse-chronological. `ClientNotesViewModel` + `ClientNoteRepositing` (InMemory + Live seam).
+- **TOTP / 2FA Authenticator** — new `VaultItemType.totp` vault item type:
+  - `TOTPGenerator` — RFC 6238 / HMAC-SHA1 implementation using `CryptoKit.Insecure.SHA1`; includes a base32 decoder (RFC 4648) and `otpauth://` URL parser.
+  - `AddEditVaultItemView`: TOTP-specific form (seed, issuer, account) with an "Import from otpauth:// URL" sheet.
+  - `VaultItemRevealSheet`: live code display with `TimelineView(.periodic)` countdown ring, auto-copy button, and color shift to danger in the last 10 s.
+  - TOTP seeds are AES-GCM-encrypted on-device (same vault encryption as all other secrets); codes are generated locally and never synced.
+- **Password Generator** — integrated into `AddEditVaultItemView` for `.password` type:
+  - `PasswordGenerator` — configurable length (8–64), uppercase/numbers/symbols toggles using `SystemRandomNumberGenerator`.
+  - Inline strength bar (Weak → Very Strong) with animated fill and color.
+- **`TOTPTests`** — unit tests covering base32 decode (RFC 4648 vectors), `otpauth://` URL parsing, and seconds-remaining bounds.
+
+### Internal
+- `ProjectTask` + `ClientNote` entities in `Entities.swift`; `ProjectTaskDTO` + `ClientNoteDTO` in `DTOs.swift`; bidirectional mappings in `Mapping.swift`.
+- `TasksViewModel` and `ClientNotesViewModel` follow the same `@MainActor @Observable` + repository protocol pattern as all other VMs.
+- `AppEnvironment` wires `tasksVM` and `clientNotesVM` in both `init` and `live()`.
+
 ## [0.25.1] - 2026-06-17
 
 ### Fixed

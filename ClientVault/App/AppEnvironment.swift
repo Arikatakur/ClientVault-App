@@ -24,6 +24,8 @@ final class AppEnvironment {
     let projectsVM: ProjectsViewModel
     let paymentsVM: PaymentsViewModel
     let vaultVM: VaultViewModel
+    let tasksVM: TasksViewModel
+    let clientNotesVM: ClientNotesViewModel
 
     init(
         config: AppConfig,
@@ -40,7 +42,9 @@ final class AppEnvironment {
         clientsVM: ClientsViewModel,
         projectsVM: ProjectsViewModel,
         paymentsVM: PaymentsViewModel,
-        vaultVM: VaultViewModel
+        vaultVM: VaultViewModel,
+        tasksVM: TasksViewModel,
+        clientNotesVM: ClientNotesViewModel
     ) {
         self.config = config
         self.session = session
@@ -57,6 +61,8 @@ final class AppEnvironment {
         self.projectsVM = projectsVM
         self.paymentsVM = paymentsVM
         self.vaultVM = vaultVM
+        self.tasksVM = tasksVM
+        self.clientNotesVM = clientNotesVM
     }
 
     /// Wires the production implementations together.
@@ -81,6 +87,12 @@ final class AppEnvironment {
         let vaultRepo: VaultRepositing = config.hasBackend
             ? LiveVaultRepository(api: api)
             : InMemoryVaultRepository()
+        let taskRepo: TaskRepositing = config.hasBackend
+            ? LiveTaskRepository(api: api)
+            : InMemoryTaskRepository()
+        let clientNoteRepo: ClientNoteRepositing = config.hasBackend
+            ? LiveClientNoteRepository(api: api)
+            : InMemoryClientNoteRepository()
         let crypto = AESGCMCrypto()
 
         let storeKit: StoreKitServicing = config.hasBackend
@@ -116,7 +128,9 @@ final class AppEnvironment {
                 keychain: keychain,
                 repo: vaultRepo,
                 session: session
-            )
+            ),
+            tasksVM: TasksViewModel(repo: taskRepo),
+            clientNotesVM: ClientNotesViewModel(repo: clientNoteRepo)
         )
     }
 }

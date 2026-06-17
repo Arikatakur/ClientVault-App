@@ -43,6 +43,26 @@ struct PaymentDTO: Codable {
     var deletedAt: Date?
 }
 
+struct ProjectTaskDTO: Codable {
+    let id: UUID
+    var projectId: UUID
+    var title: String
+    var isCompleted: Bool
+    var position: Int
+    var createdAt: Date
+    var updatedAt: Date
+    var deletedAt: Date?
+}
+
+struct ClientNoteDTO: Codable {
+    let id: UUID
+    var clientId: UUID
+    var body: String
+    var createdAt: Date
+    var updatedAt: Date
+    var deletedAt: Date?
+}
+
 struct VaultItemDTO: Codable {
     let id: UUID
     var title: String

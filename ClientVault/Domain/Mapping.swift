@@ -64,6 +64,44 @@ extension Payment {
     }
 }
 
+extension ProjectTaskDTO {
+    func toDomain() -> ProjectTask {
+        ProjectTask(
+            id: id, projectId: projectId, title: title,
+            isCompleted: isCompleted, position: position,
+            createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt
+        )
+    }
+}
+
+extension ProjectTask {
+    func toDTO() -> ProjectTaskDTO {
+        ProjectTaskDTO(
+            id: id, projectId: projectId, title: title,
+            isCompleted: isCompleted, position: position,
+            createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt
+        )
+    }
+}
+
+extension ClientNoteDTO {
+    func toDomain() -> ClientNote {
+        ClientNote(
+            id: id, clientId: clientId, body: body,
+            createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt
+        )
+    }
+}
+
+extension ClientNote {
+    func toDTO() -> ClientNoteDTO {
+        ClientNoteDTO(
+            id: id, clientId: clientId, body: body,
+            createdAt: createdAt, updatedAt: updatedAt, deletedAt: deletedAt
+        )
+    }
+}
+
 extension VaultItemDTO {
     func toDomain() -> VaultItem {
         VaultItem(

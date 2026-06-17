@@ -5,10 +5,13 @@ struct ProjectDetailView: View {
     let vm: ProjectsViewModel
     let clientsVM: ClientsViewModel
     let paymentsVM: PaymentsViewModel
+    let tasksVM: TasksViewModel
 
     @State private var showEditForm = false
     @State private var showAddPaymentForm = false
     @State private var editingPayment: Payment?
+    @State private var newTaskTitle = ""
+    @State private var showAddTaskField = false
 
     /// Derived from VM so edits immediately reflect here without popping.
     private var project: Project? {
@@ -52,6 +55,7 @@ struct ProjectDetailView: View {
             PaymentFormView(mode: .edit(payment), vm: paymentsVM)
         }
         .task { await paymentsVM.load() }
+        .task { await tasksVM.load(projectId: projectId) }
     }
 
     // MARK: - Content
@@ -64,6 +68,7 @@ struct ProjectDetailView: View {
                 if project.summary != nil || project.githubRepo != nil {
                     detailsCard(project: project)
                 }
+                tasksSection(project: project)
                 paymentsSection(project: project)
             }
             .padding(Spacing.lg)
@@ -134,6 +139,106 @@ struct ProjectDetailView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Tasks
+
+    @ViewBuilder
+    private func tasksSection(project: Project) -> some View {
+        let tasks = tasksVM.tasks(for: project.id)
+        let completed = tasks.filter { $0.isCompleted }.count
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            HStack {
+                SectionHeader(title: "Tasks")
+                if !tasks.isEmpty {
+                    Text("\(completed)/\(tasks.count)")
+                        .font(Typography.caption())
+                        .foregroundStyle(Palette.textSecondary)
+                        .padding(.horizontal, Spacing.xs)
+                }
+                Spacer()
+                Button {
+                    Haptics.shared.impact(.light)
+                    withAnimation { showAddTaskField.toggle() }
+                } label: {
+                    Image(systemName: showAddTaskField ? "minus.circle" : "plus.circle")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(Palette.accent)
+                }
+                .accessibilityLabel(showAddTaskField ? "Cancel add task" : "Add task")
+            }
+
+            if !tasks.isEmpty {
+                taskProgressBar(completed: completed, total: tasks.count)
+            }
+
+            if showAddTaskField {
+                HStack(spacing: Spacing.sm) {
+                    TextField("New task…", text: $newTaskTitle)
+                        .font(Typography.subheadline())
+                        .onSubmit { submitNewTask(projectId: project.id) }
+                    Button {
+                        submitNewTask(projectId: project.id)
+                    } label: {
+                        Image(systemName: "arrow.up.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundStyle(newTaskTitle.isEmpty ? Palette.textTertiary : Palette.accent)
+                    }
+                    .disabled(newTaskTitle.isEmpty)
+                }
+                .padding(Spacing.md)
+                .background(Palette.surface, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+            }
+
+            if tasks.isEmpty && !showAddTaskField {
+                Text("No tasks yet.")
+                    .font(Typography.subheadline())
+                    .foregroundStyle(Palette.textSecondary)
+                    .padding(.horizontal, Spacing.xs)
+            } else {
+                ForEach(tasks) { task in
+                    TaskRow(task: task) {
+                        Task { await tasksVM.toggle(task) }
+                    }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            Task {
+                                await tasksVM.delete(id: task.id, projectId: project.id)
+                                Haptics.shared.impact(.medium)
+                            }
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func taskProgressBar(completed: Int, total: Int) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(Palette.surface)
+                    .frame(height: 6)
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(completed == total ? Palette.success : Palette.accent)
+                    .frame(width: total > 0 ? geo.size.width * CGFloat(completed) / CGFloat(total) : 0, height: 6)
+                    .animation(.easeInOut, value: completed)
+            }
+        }
+        .frame(height: 6)
+    }
+
+    private func submitNewTask(projectId: UUID) {
+        let trimmed = newTaskTitle.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return }
+        Task {
+            await tasksVM.add(projectId: projectId, title: trimmed)
+            Haptics.shared.impact(.light)
+        }
+        newTaskTitle = ""
+        withAnimation { showAddTaskField = false }
     }
 
     // MARK: - Payments
@@ -220,6 +325,37 @@ struct ProjectDetailView: View {
                 .foregroundStyle(Palette.textSecondary)
         }
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Task row
+
+private struct TaskRow: View {
+    let task: ProjectTask
+    let onToggle: () -> Void
+
+    var body: some View {
+        HStack(spacing: Spacing.md) {
+            Button(action: onToggle) {
+                Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                    .font(.system(size: 20))
+                    .foregroundStyle(task.isCompleted ? Palette.success : Palette.textTertiary)
+                    .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
+            }
+            .buttonStyle(.plain)
+
+            Text(task.title)
+                .font(Typography.subheadline())
+                .foregroundStyle(task.isCompleted ? Palette.textTertiary : Palette.textPrimary)
+                .strikethrough(task.isCompleted, color: Palette.textTertiary)
+                .animation(.easeInOut(duration: 0.2), value: task.isCompleted)
+        }
+        .padding(Spacing.md)
+        .background(Palette.surface, in: RoundedRectangle(cornerRadius: Radius.md, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+                .strokeBorder(Palette.surfaceStroke, lineWidth: 1)
+        )
     }
 }
 

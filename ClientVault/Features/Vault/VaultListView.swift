@@ -142,6 +142,7 @@ extension VaultItemType {
         case .apiKey:     return "chevron.left.forwardslash.chevron.right"
         case .secureNote: return "note.text"
         case .card:       return "creditcard"
+        case .totp:       return "clock.badge.checkmark"
         case .custom:     return "lock.rectangle"
         }
     }

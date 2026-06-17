@@ -1,4 +1,5 @@
 import SwiftUI
+import CryptoKit
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -85,6 +86,96 @@ struct VaultItemRevealSheet: View {
 
     @ViewBuilder
     private func secretFields(_ decrypted: VaultItemBody) -> some View {
+        if item.type == .totp {
+            totpView(seed: decrypted.secret, url: decrypted.url)
+        } else {
+            standardSecretFields(decrypted)
+        }
+    }
+
+    // MARK: - TOTP live code view
+
+    private func totpView(seed: String, url: String?) -> some View {
+        VStack(alignment: .leading, spacing: Spacing.md) {
+            let parts = url?.split(separator: "|", maxSplits: 1)
+            let issuer = parts.flatMap { $0.count > 0 ? String($0[0]) : nil }
+            let account = parts.flatMap { $0.count > 1 ? String($0[1]) : nil }
+
+            if let issuer, !issuer.isEmpty {
+                HStack(spacing: Spacing.sm) {
+                    Text("Issuer")
+                        .font(Typography.footnote())
+                        .foregroundStyle(Palette.textSecondary)
+                    Text(issuer)
+                        .font(Typography.body())
+                        .foregroundStyle(Palette.textPrimary)
+                }
+            }
+            if let account, !account.isEmpty {
+                HStack(spacing: Spacing.sm) {
+                    Text("Account")
+                        .font(Typography.footnote())
+                        .foregroundStyle(Palette.textSecondary)
+                    Text(account)
+                        .font(Typography.body())
+                        .foregroundStyle(Palette.textPrimary)
+                }
+            }
+
+            TimelineView(.periodic(from: .now, by: 1)) { _ in
+                totpCodeCard(seed: seed)
+            }
+        }
+    }
+
+    private func totpCodeCard(seed: String) -> some View {
+        let code = (try? TOTPGenerator.currentCode(seed: seed)) ?? "------"
+        let remaining = TOTPGenerator.secondsRemaining
+        let fraction = Double(remaining) / 30.0
+
+        return VStack(spacing: Spacing.sm) {
+            Text(formattedTOTP(code))
+                .font(.system(size: 40, weight: .bold, design: .monospaced))
+                .foregroundStyle(Palette.textPrimary)
+                .contentTransition(.numericText())
+
+            HStack(spacing: Spacing.sm) {
+                ProgressView(value: fraction)
+                    .tint(fraction > 0.33 ? Palette.vault : Palette.danger)
+                    .frame(maxWidth: .infinity)
+                Text("\(remaining)s")
+                    .font(Typography.caption().monospacedDigit())
+                    .foregroundStyle(fraction > 0.33 ? Palette.textSecondary : Palette.danger)
+                    .frame(width: 30, alignment: .trailing)
+            }
+
+            Button {
+                copy(code.filter { $0 != " " }, key: "totp")
+            } label: {
+                Label(
+                    copiedField == "totp" ? "Copied!" : "Copy code",
+                    systemImage: copiedField == "totp" ? "checkmark" : "doc.on.doc"
+                )
+                .font(Typography.subheadline())
+                .foregroundStyle(copiedField == "totp" ? Palette.success : Palette.vault)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(Spacing.lg)
+        .frame(maxWidth: .infinity)
+        .background(Palette.surface)
+        .clipShape(RoundedRectangle(cornerRadius: Radius.md))
+    }
+
+    private func formattedTOTP(_ code: String) -> String {
+        guard code.count == 6 else { return code }
+        return "\(code.prefix(3)) \(code.suffix(3))"
+    }
+
+    // MARK: - Standard secret fields (non-TOTP)
+
+    @ViewBuilder
+    private func standardSecretFields(_ decrypted: VaultItemBody) -> some View {
         VStack(alignment: .leading, spacing: Spacing.md) {
             if !isRevealed {
                 Button {
@@ -172,6 +263,7 @@ struct VaultItemRevealSheet: View {
         case .apiKey:     return "API Key"
         case .secureNote: return "Note"
         case .card:       return "Card Number"
+        case .totp:       return "TOTP Seed"
         case .custom:     return "Secret"
         }
     }

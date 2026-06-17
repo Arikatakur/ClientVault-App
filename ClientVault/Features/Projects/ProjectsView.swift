@@ -147,7 +147,7 @@ struct ProjectsView: View {
         .scrollContentBackground(.hidden)
         .refreshable { await vm.load() }
         .navigationDestination(for: Project.self) { project in
-            ProjectDetailView(projectId: project.id, vm: vm, clientsVM: clientsVM, paymentsVM: paymentsVM)
+            ProjectDetailView(projectId: project.id, vm: vm, clientsVM: clientsVM, paymentsVM: paymentsVM, tasksVM: env.tasksVM)
         }
     }
 }
