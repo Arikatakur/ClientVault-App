@@ -53,6 +53,10 @@ section in Settings wired to both.
 - `PushRegistering` protocol removed (only one implementation; no test replacements).
 - `ClientVaultApp` refreshes push authorization status on every active foreground return.
 
+### Fixed
+- `AuthTests`: added missing `gitHubClientID: nil` argument to `AppConfig` initializer
+  (CI build failure after `AppConfig` gained the new property).
+
 ### Internal
 - Push `aps-environment` entitlement intentionally **not added**: requires the App ID Push
   Notifications capability and Match provisioning profile update before a TestFlight build
