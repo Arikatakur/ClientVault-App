@@ -74,3 +74,10 @@ legacy/flutter/ios/Flutter/.last_build_id
 
 # Local assistant/tool settings
 /.claude/settings.local.json
+
+
+# amplify
+node_modules
+.amplify
+amplify_outputs*
+amplifyconfiguration*
